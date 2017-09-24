@@ -214,6 +214,34 @@ class Dataset:
                              for k in merge_dicts(*[d.info for d in datasets])})
 
 
+class MetaDataset(Dataset):
+
+    def __init__(self, info=None, *args, **kwargs):
+        super().__init__(None, None, None, info)
+        self.args = args
+        self.kwargs = kwargs
+
+    def generate_datasets(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def generate(self, count, *args, **kwargs):
+        if not args: args = self.args
+        if not kwargs: kwargs = self.kwargs
+        for _ in range(count):
+            yield self.generate_datasets(*args, **kwargs)
+
+    def generate_batch(self, num, *args, **kwargs):
+        return [d for d in self.generate(num, *args, **kwargs)]
+
+    @property
+    def dim_data(self, *args, **kwargs):
+        return self.generate_datasets(*args, **kwargs).train.dim_data
+
+    @property
+    def dim_target(self, *args, **kwargs):
+        return self.generate_datasets(*args, **kwargs).train.dim_target
+
+
 def stack_or_concat(list_of_arays):
     func = np.concatenate if list_of_arays[0].ndim == 1 else np.vstack
     return func(list_of_arays)
@@ -299,3 +327,104 @@ class WindowedData(object):
         if right_pad:
             base = np.concatenate([base, pad(self.data[item], right_pad)])
         return base
+
+
+class ExampleVisiting:
+    def __init__(self, dataset, batch_size, epochs=None):
+        """
+        Class for stochastic sampling of data points. It is most useful for feeding examples for the the
+        training ops of `ReverseHG` or `ForwardHG`. Most notably, if the number of epochs is specified,
+        the class takes track of the examples per mini-batches which is important for the backward pass
+        of `ReverseHG` method.
+
+        :param dataset: instance of `Dataset` class
+        :param batch_size:
+        :param epochs: number of epochs (can be None, in which case examples are
+                        fed continuously)
+        """
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.T = int(np.ceil(dataset.num_examples / batch_size))
+        if self.epochs: self.T *= self.epochs
+
+        self.training_schedule = None
+        self.iter_per_epoch = int(dataset.num_examples / batch_size)
+
+    def setting(self):
+        excluded = ['training_schedule', 'datasets']
+        dictionary = {k: v for k, v in vars(self).items() if k not in excluded}
+        if hasattr(self.dataset, 'setting'):
+            dictionary['dataset'] = self.dataset.setting()
+        return dictionary
+
+    def generate_visiting_scheme(self):
+        """
+        Generates and stores example visiting scheme, as a numpy array of integers.
+
+        :return: self
+        """
+
+        def all_indices_shuffled():
+            _res = list(range(self.dataset.num_examples))
+            np.random.shuffle(_res)
+            return _res
+
+        # noinspection PyUnusedLocal
+        self.training_schedule = np.concatenate([all_indices_shuffled()
+                                                 for _ in range(self.epochs or 1)])
+        return self
+
+    def create_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
+        return self.create_feed_dict_supplier(x, y, other_feeds=other_feeds,
+                                              lambda_feeds=lambda_feeds, name=name)
+
+    def create_feed_dict_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
+        """
+
+        :param x: placeholder for independent variable
+        :param y: placeholder for dependent variable
+        :param lambda_feeds: dictionary of placeholders: number_of_example -> substitution
+        :param other_feeds: dictionary of other feeds (e.g. dropout factor, ...) to add to the input output
+                            feed_dict
+        :return: a function that generates a feed_dict with the right signature for Reverse and Forward HyperGradient
+                    classes
+        """
+
+        if not lambda_feeds:
+            lambda_processed_feeds = {}
+        if not other_feeds:
+            other_feeds = {}
+
+        def _training_supplier(step=None):
+            nonlocal lambda_processed_feeds, other_feeds
+
+            if step >= self.T:
+                if step % self.T == 0:
+                    if self.epochs:
+                        print('WARNING: End of the training scheme reached.'
+                              'Generating another scheme.')
+                    self.generate_visiting_scheme()
+                step %= self.T
+
+            if self.training_schedule is None:
+                # print('visiting scheme not yet generated!')
+                self.generate_visiting_scheme()
+
+            # noinspection PyTypeChecker
+            nb = self.training_schedule[step * self.batch_size: min(
+                (step + 1) * self.batch_size, len(self.training_schedule))]
+
+            bx = self.dataset.data[nb, :]
+            by = self.dataset.target[nb, :]
+            if lambda_feeds:
+                lambda_processed_feeds = {k: v(nb) for k, v in lambda_feeds.items()}
+            else:
+                lambda_processed_feeds = {}
+            return {**{x: bx, y: by}, **other_feeds, **lambda_processed_feeds}
+
+        if name:
+            NAMED_SUPPLIER[name] = _training_supplier
+
+        return _training_supplier
+
