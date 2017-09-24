@@ -26,13 +26,13 @@ class SLExperiment:
          for opt in self.optimizers.values()]
 
     def std_records(self):
-        import rfho as rf
+        import experiment_manager.savers.records as rec
         return [
-            rf.Records.tensors(*self.errors, *self.scores, fd='train'),
-            rf.Records.tensors(*self.errors, *self.scores, fd='valid'),
-            rf.Records.tensors(*self.errors, *self.scores, fd='test'),
-            rf.Records.hyperparameters(),
-            rf.Records.hypergradients(),
+            rec.tensors(*self.errors, *self.scores, fd='train'),
+            rec.tensors(*self.errors, *self.scores, fd='valid'),
+            rec.tensors(*self.errors, *self.scores, fd='test'),
+            rec.hyperparameters(),
+            rec.hypergradients(),
         ]
 
     def mah(self, c):
