@@ -74,18 +74,19 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
         def load_all_images(self):
             from scipy.ndimage import imread
             from scipy.misc import imresize
-            clss = self.info['classes']
+            _cls = self.info['classes']
+            _base_folder = self.info['base_folder']
 
             def _load_class(c):
-                all_images = list(clss[c])
+                all_images = list(_cls[c])
                 for img_name in all_images:
-                    img = imread(join(base_folder, join(c, img_name)), mode='RGB')
+                    img = imread(join(_base_folder, join(c, img_name)), mode='RGB')
                     if self.info['resize']:
                         # noinspection PyTypeChecker
                         img = imresize(img, size=(self.info['resize'], self.info['resize'], 3)) / 255.
                     self._loaded_images[c][img_name] = img
 
-            for cls in clss:
+            for cls in _cls:
                 self._threads.append(threading.Thread(target=lambda: _load_class(cls), daemon=True))
                 self._threads[-1].start()
 
@@ -95,7 +96,8 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
         def generate_datasets(self, num_classes=None, num_examples=None, wait_for_n_min=None):
 
             if wait_for_n_min:
-                while not _check_available(wait_for_n_min):
+                import time
+                while not self.check_loaded_images(wait_for_n_min):
                     time.sleep(5)
 
             if not num_examples: num_examples = self.kwargs['num_examples']
@@ -124,7 +126,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
                         from scipy.misc import imread, imresize
                         data.append(
                             imresize(
-                                imread(join(base_folder, join(c, img_name)), mode='RGB'),
+                                imread(join(self.info['base_folder'], join(c, img_name)), mode='RGB'),
                                 size=(self.info['resize'], self.info['resize'], 3)) / 255.
                         )
                     targets.append(rand_class_dict[c])
@@ -143,6 +145,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
         label_names = os.listdir(base_folder)
         labels_and_images = {ln: os.listdir(join(base_folder, ln)) for ln in label_names}
         meta_dts.append(ImageNetMetaDataset(info={
+            'base_folder': base_folder,
             'classes': labels_and_images,
             'resize': resize,
             'one_hot_enc': one_hot_enc
