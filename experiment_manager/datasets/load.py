@@ -91,6 +91,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
                 self._threads[-1].start()
 
         def check_loaded_images(self, n_min):
+            print([len(v) for v in self._loaded_images.values()])
             return self._loaded_images and all([len(v) >= n_min for v in self._loaded_images.values()])
 
         def generate_datasets(self, num_classes=None, num_examples=None, wait_for_n_min=None):
