@@ -5,7 +5,7 @@ import h5py
 import os
 
 
-def img_to_array(image_file, resize=84, flip=False, convert_to_gray=False):
+def img_to_array_old(image_file, resize=84, flip=False, convert_to_gray=False):
     img_z = Image.open(image_file)
     # img_z.convert('RGB')  # not useful at all...
     if resize:
@@ -17,6 +17,15 @@ def img_to_array(image_file, resize=84, flip=False, convert_to_gray=False):
     ary = np.array(img_z)
     ary = np.stack((ary,)*3, axis=2) if ary.ndim == 2 else ary  # some images are black and white
     return ary if ary.shape[-1] == 3 else ary[:, :, :3]  # some images have an alpha channel... (unbelievable...)
+
+
+def img_to_array(imfile, resize=84):
+    from scipy.misc import imresize, imread
+    img = imread(imfile, mode='RGB')
+    if resize:
+        # noinspection PyTypeChecker
+        img = imresize(img, size=(resize, resize, 3))
+    return img
 
 
 
@@ -54,6 +63,7 @@ def convert_mini_imagenet():
         img_shape = img_to_array(files[0]).shape
 
         img = img_to_array(files[0])
+        print(img)
         print(img.dtype)
 
         h5file = h5py.File(r'C:\Users\lfranceschi\DATASETS\imagenet\mini_res84\%s.h5' % st, 'w')
