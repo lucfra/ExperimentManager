@@ -67,7 +67,7 @@ def convert_mini_imagenet():
         print(img.dtype)
 
         h5file = h5py.File(r'C:\Users\lfranceschi\DATASETS\imagenet\mini_res84\%s.h5' % st, 'w')
-        X = h5file.create_dataset("X", (n, img_shape[0], img_shape[1], img_shape[2]), h5py.h5t.NATIVE_INT8)
+        X = h5file.create_dataset("X", (n, img_shape[0], img_shape[1], img_shape[2]), dtype=np.uint8)
         images_to_tensor(files, X)
 
 
