@@ -36,8 +36,8 @@ class on_hyperiteration:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.collect_data:
             if exc_tb:
-                self.saver.save_obj((str(exc_type), str(exc_val), str(exc_tb)),
-                                    'exception' + self.append_string)
+                self.saver.save_text(str((str(exc_type), str(exc_val), str(exc_tb))),
+                                     'exception' + self.append_string)
 
             self.saver.pack_save_dictionaries(append_string=self.append_string)
 

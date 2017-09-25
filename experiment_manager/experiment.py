@@ -22,15 +22,15 @@ class SLExperiment:
         pass
 
     def initialize(self, ss):
-        [opt.initalize() if hasattr(opt, 'initialize') else ss.run(opt.initializer)
+        [opt.initialize() if hasattr(opt, 'initialize') else ss.run(opt.initializer)
          for opt in self.optimizers.values()]
 
     def std_records(self):
         import experiment_manager.savers.records as rec
         return [
-            rec.tensors(*self.errors, *self.scores, fd='train'),
-            rec.tensors(*self.errors, *self.scores, fd='valid'),
-            rec.tensors(*self.errors, *self.scores, fd='test'),
+            rec.tensors(*self.errors.values(), *self.scores.values(), fd='train'),
+            rec.tensors(*self.errors.values(), *self.scores.values(), fd='valid'),
+            rec.tensors(*self.errors.values(), *self.scores.values(), fd='test'),
             rec.hyperparameters(),
             rec.hypergradients(),
         ]
