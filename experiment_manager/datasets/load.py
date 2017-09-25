@@ -4,6 +4,7 @@ import experiment_manager as em
 import os
 import numpy as np
 import threading
+import h5py
 
 from_env = os.getenv('RFHO_DATA_FOLDER')
 if from_env:
@@ -63,7 +64,22 @@ def balanced_choice_wr(a, num):
 
 
 def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_num_classes=None,
-                       std_num_examples=None, resize=84, one_hot_enc=True, load_all_images=True):
+                       std_num_examples=None, resize=84, one_hot_enc=True, load_all_images=True, h5=True):
+    """
+    Load a meta-datasets from Mini-ImageNet. Returns a Datasets of MetaDatasets,
+
+    :param folder: base folder
+    :param sub_folders: optional sub-folders in which data is locate
+    :param std_num_classes: standard number of classes to be included in each generated per dataset
+                            (can be None, default)
+    :param std_num_examples: standard number of examples to be picked in each generated per dataset
+                            (can be None, default)
+    :param resize:  resizing dimension
+    :param one_hot_enc:
+    :param load_all_images:
+    :param h5:  True (default) to use HDF5 files, when False search for JPEG images.
+    :return:
+    """
     class ImageNetMetaDataset(em.MetaDataset):
 
         def __init__(self, info=None, num_classes=None, num_examples=None):
@@ -72,26 +88,34 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
             self._threads = []
 
         def load_all_images(self):
-            from scipy.ndimage import imread
-            from scipy.misc import imresize
-            _cls = self.info['classes']
-            _base_folder = self.info['base_folder']
+            if h5:
+                _file = self.info['file']
+                h5m = h5py.File(_file, 'r')
+                img_per_class = 600
+                for j in range(len(h5m['X'])):
+                    self._loaded_images[j//img_per_class][j] = np.array(h5m['X'][j], dtype=np.float32)/255.
+                    # images were stored as int
+            else:
+                from scipy.ndimage import imread
+                from scipy.misc import imresize
+                _cls = self.info['classes']
+                _base_folder = self.info['base_folder']
 
-            def _load_class(c):
-                all_images = list(_cls[c])
-                for img_name in all_images:
-                    img = imread(join(_base_folder, join(c, img_name)), mode='RGB')
-                    if self.info['resize']:
-                        # noinspection PyTypeChecker
-                        img = imresize(img, size=(self.info['resize'], self.info['resize'], 3)) / 255.
-                    self._loaded_images[c][img_name] = img
+                def _load_class(c):
+                    all_images = list(_cls[c])
+                    for img_name in all_images:
+                        img = imread(join(_base_folder, join(c, img_name)), mode='RGB')
+                        if self.info['resize']:
+                            # noinspection PyTypeChecker
+                            img = imresize(img, size=(self.info['resize'], self.info['resize'], 3)) / 255.
+                        self._loaded_images[c][img_name] = img
 
-            for cls in _cls:
-                self._threads.append(threading.Thread(target=lambda: _load_class(cls), daemon=True))
-                self._threads[-1].start()
+                for cls in _cls:
+                    self._threads.append(threading.Thread(target=lambda: _load_class(cls), daemon=True))
+                    self._threads[-1].start()
 
         def check_loaded_images(self, n_min):
-            print([len(v) for v in self._loaded_images.values()])
+            # print([len(v) for v in self._loaded_images.values()])
             return self._loaded_images and all([len(v) >= n_min for v in self._loaded_images.values()])
 
         def generate_datasets(self, num_classes=None, num_examples=None, wait_for_n_min=None):
@@ -142,15 +166,22 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
     if sub_folders is None: sub_folders = ['train', 'val', 'test']
     meta_dts = []
     for ds in sub_folders:
-        base_folder = join(folder, ds)
-        label_names = os.listdir(base_folder)
-        labels_and_images = {ln: os.listdir(join(base_folder, ln)) for ln in label_names}
-        meta_dts.append(ImageNetMetaDataset(info={
-            'base_folder': base_folder,
-            'classes': labels_and_images,
-            'resize': resize,
-            'one_hot_enc': one_hot_enc
-        }, num_classes=std_num_classes, num_examples=std_num_examples))
+        if not h5:
+            base_folder = join(folder, ds)
+            label_names = os.listdir(base_folder)
+            labels_and_images = {ln: os.listdir(join(base_folder, ln)) for ln in label_names}
+            meta_dts.append(ImageNetMetaDataset(info={
+                'base_folder': base_folder,
+                'classes': labels_and_images,
+                'resize': resize,
+                'one_hot_enc': one_hot_enc
+            }, num_classes=std_num_classes, num_examples=std_num_examples))
+        else:
+            file = join(folder, ds + '.h5')
+            meta_dts.append(ImageNetMetaDataset(info={
+                'file': file,
+                'one_hot_enc': one_hot_enc
+            }, num_classes=std_num_classes, num_examples=std_num_examples))
     dts = em.Datasets.from_list(meta_dts)
     if load_all_images:
         import time
@@ -159,3 +190,9 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
         while not all(_check_available(15)):
             time.sleep(1)  # be sure that there are at least 15 images per class in each meta-dataset
     return dts
+
+
+if __name__ == '__main__':
+    mmi = meta_mini_imagenet()
+    ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
+    print()

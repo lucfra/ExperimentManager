@@ -39,3 +39,9 @@ def to_one_hot_enc(seq, dimension=None):
         return _tmp
 
     return np.array([create_and_set(_v) for _v in seq])
+
+
+def filter_vars(var_name, scope):
+    import tensorflow as tf
+    return [v for v in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope=scope.name) if v.name.endswith('%s:0' % var_name)]

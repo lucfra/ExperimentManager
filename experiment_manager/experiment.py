@@ -3,7 +3,8 @@ class SLExperiment:
     def __init__(self, datasets):
         import tensorflow as tf
         self.datasets = datasets
-        self.x, self.y = tf.placeholder(tf.float32, name='x'), tf.placeholder(tf.float32, name='y')
+        self.x = tf.placeholder(tf.float32, name='x', shape=self._compute_input_shape())
+        self.y = tf.placeholder(tf.float32, name='y', shape=self._compute_output_shape())
         self.model = None
         self.errors = {}
         self.scores = {}
@@ -37,3 +38,19 @@ class SLExperiment:
 
     def mah(self, c):
         pass
+
+    def _compute_input_shape(self):
+        try:
+            sh = self.datasets.train.dim_data
+            return (None, sh) if isinstance(sh, int) else (None,) + sh
+        except:
+            print('Could not determine input dimension')
+            return None
+
+    def _compute_output_shape(self):
+        try:
+            sh = self.datasets.train.dim_target
+            return (None, sh) if isinstance(sh, int) else (None,) + sh
+        except:
+            print('Could not determine output dimension')
+            return None
