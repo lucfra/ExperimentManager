@@ -13,10 +13,10 @@ from experiment_manager.datasets.structures import NAMED_SUPPLIER
 
 class on_hyperiteration:
     """
-    context for record at each hyperiteration
+    context for record_hyper at each hyperiteration
     """
 
-    def __init__(self, saver, *record_what, append_string='', do_print=None, collect_data=None):
+    def __init__(self, saver, *record_what, append_string='', do_print=None, collect_data=None, every=1):
         self.saver = saver
         self.append_string = append_string
         if self.append_string: self.append_string = '__' + self.append_string
@@ -29,6 +29,7 @@ class on_hyperiteration:
         self._processed_items = []
 
         self._step = 0
+        self.every = every
 
     def __enter__(self):
         self._wrap()
@@ -83,11 +84,36 @@ class on_hyperiteration:
 
     # noinspection PyUnusedLocal
     def _execute_save(self, res, *args, **kwargs):  # maybe args and kwargs could be useful...
-        self.saver.save(step=self._step, append_string=self.append_string,
-                        processed_items=self._processed_items,
-                        do_print=self.do_print, collect_data=self.collect_data,
-                        _res=res)
+        if self._step % self.every == 0:
+            self.saver.save(step=self._step, append_string=self.append_string,
+                            processed_items=self._processed_items,
+                            do_print=self.do_print, collect_data=self.collect_data,
+                            _res=res)
         self._step += 1
+
+
+# noinspection PyPep8Naming
+class on_run(on_hyperiteration):
+    def __init__(self, saver, *record_what, append_string='', do_print=None, collect_data=None, every=1000):
+        super().__init__(saver, *record_what, append_string=append_string, do_print=do_print, collect_data=collect_data,
+                         every=every)
+        self._uninitialized = True
+
+    def _wrap(self):
+        self._unwrapped.append(tf.Session.run)
+        tf.Session.run = self._saver_wrapper(tf.Session.run)
+
+    def _unwrap(self):
+        tf.Session.run = self._unwrapped[0]
+
+    def _execute_save(self, res, *args, **kwargs):
+        if self._uninitialized:
+            self._processed_items += rf.flatten_list(
+                [Saver.process_items(*e(*args, **kwargs)) for e in self._record_what])
+            self._uninitialized = False
+        self._unwrap()  # otherwise we get infinite recursion!
+        super()._execute_save(res, *args, **kwargs)
+        self._wrap()
 
 
 # noinspection PyClassHasNoInit,PyPep8Naming
@@ -165,7 +191,7 @@ def norms_of_d_dynamics_d_hypers(fd=None):
 
 def hyperparameters():
     """
-    Simple one! record all hyperparameter values, assuming the usage of `HyperOptimizer`
+    Simple one! record_hyper all hyperparameter values, assuming the usage of `HyperOptimizer`
 
     :return: a function
     """
@@ -202,15 +228,15 @@ def hypergradients():
 def tensors(*_tensors, key=None, scope=None, name_contains=None,
             rec_name='', op=tf.identity, fd=None, condition=True):
     """
-    Little more difficult... attempts to record tensor named name
+    Little more difficult... attempts to record_hyper tensor named name
 
-    :param name_contains: record all tensors which name contains this string. Can be a list.
+    :param name_contains: record_hyper all tensors which name contains this string. Can be a list.
     :type condition: bool | function
     :param condition: optional condition for triggering the saving of tensors, can have different
                         signatures
     :param _tensors: varargs of tensor names
     :param scope: optional for collections
-    :param key: to record collections
+    :param key: to record_hyper collections
     :param op: optional operation to apply to each tensor
     :param rec_name: optional name to prepend to all tensors recorded by this
     :param fd: # given to _process_feed_dicts_for_rec
@@ -244,6 +270,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
     return _call
 
 
+# noinspection PyUnresolvedReferences
 def exponential_running_average(*what, weight, condition=True):
     """
     computes exp running average till time k-1

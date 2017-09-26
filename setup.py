@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='ExperimentManager',
-    version='',
+    version='0.1',
     packages=['experiment_manager', 'experiment_manager.savers', 'experiment_manager.datasets'],
     url='',
     license='',

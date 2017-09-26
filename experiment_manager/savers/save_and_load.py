@@ -282,9 +282,9 @@ class Saver:
                           options (optional): to be passed to tf.Session.run
                           run_metadata (optional): to be passed to tf.Session.run
         :param timer: optional timer object. If None creates a new one. If false does not register time.
-                        If None or Timer it adds to the save_dict an entry time that record elapsed_time.
+                        If None or Timer it adds to the save_dict an entry time that record_hyper elapsed_time.
                         The time required to perform data collection and saving are not counted, since typically
-                        the aim is to record the true algorithm execution time!
+                        the aim is to record_hyper the true algorithm execution time!
         :param root_directory: string, name of root directory (default ~HOME/Experiments)
         :param do_print: (optional, default True) will print by default `save_dict` each time method `save` is executed
         :param collect_data: (optional, default True) will save by default `save_dict` each time
@@ -303,7 +303,7 @@ class Saver:
         experiment_names = as_list(experiment_names)
         if append_date_to_name:
             from datetime import datetime
-            experiment_names += [datetime.today().strftime('%d-%m-%y__%Hh%Mm')]
+            experiment_names += [str(time.time()) + '__' + datetime.today().strftime('%d-%m-%y__%Hh%Mm')]
         self.experiment_names = list(experiment_names)
 
         if not os.path.isabs(experiment_names[0]):
@@ -345,6 +345,7 @@ class Saver:
         :param exclude:
         :return:
         """
+        # noinspection PyUnresolvedReferences
         from types import ModuleType
 
         if exclude is None: exclude = []
@@ -534,16 +535,21 @@ class Saver:
 
         return packed_dict
 
-    def record(self, *what, append_string=''):  # TODO  this is un initial (maybe bad) idea  [getting better].
+    def record_hyper(self, *what, append_string='', every=1):  # TODO this is initial (maybe bad) idea [getting better].
         """
         Context manager for saver. saves statistics at the end of every hyperiteration
 
+        :param every:
         :param what:
         :param append_string:
         :return:
         """
         from experiment_manager.savers import records
-        return records.on_hyperiteration(self, *what, append_string=append_string)
+        return records.on_hyperiteration(self, *what, append_string=append_string, every=every)
+
+    def record_run(self, *what, append_string='', every=1000):
+        from experiment_manager.savers import records
+        return records.on_run(self, *what, append_string=append_string, every=every)
 
     def load_text(self, name):
         """
