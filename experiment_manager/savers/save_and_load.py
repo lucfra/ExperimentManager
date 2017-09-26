@@ -535,21 +535,22 @@ class Saver:
 
         return packed_dict
 
-    def record_hyper(self, *what, append_string='', every=1):  # TODO this is initial (maybe bad) idea [getting better].
+    def record(self, *what, where='hyper', append_string='', every=1):  # TODO this is initial (maybe bad) idea [getting better].
         """
         Context manager for saver. saves statistics at the end of every hyperiteration
 
+        :param where:
         :param every:
         :param what:
         :param append_string:
         :return:
         """
         from experiment_manager.savers import records
-        return records.on_hyperiteration(self, *what, append_string=append_string, every=every)
-
-    def record_run(self, *what, append_string='', every=1000):
-        from experiment_manager.savers import records
-        return records.on_run(self, *what, append_string=append_string, every=every)
+        associations = {'hyper': records.on_hyperiteration,
+                        'run': records.on_run,
+                        'forward': records.on_forward}
+        assert where in associations, 'param where must be one of %s' % list(associations.keys())
+        return associations[where](self, *what, append_string=append_string, every=every)
 
     def load_text(self, name):
         """
