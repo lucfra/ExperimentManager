@@ -3,6 +3,7 @@ from PIL import Image
 import h5py
 # from progressbar import ProgressBar, Percentage, Bar, ETA
 import os
+import experiment_manager as em
 
 
 def img_to_array_old(image_file, resize=84, flip=False, convert_to_gray=False):
@@ -53,7 +54,7 @@ def tensor_to_images(prefix, tensor):
 
 def convert_mini_imagenet():
     for st in ['train', 'val', 'test']:
-        folder = r'C:\Users\lfranceschi\DATASETS\imagenet\mini_res84\%s' % st
+        folder = os.path.join(em.load.MINI_IMAGENET_FOLDER, st)
         classes = os.listdir(folder)
         files = []
         for c in classes:
