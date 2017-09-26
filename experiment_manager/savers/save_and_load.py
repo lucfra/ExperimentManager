@@ -535,9 +535,10 @@ class Saver:
 
         return packed_dict
 
-    def record(self, *what, where='hyper', append_string='', every=1):  # TODO this is initial (maybe bad) idea [getting better].
+    def record(self, *what, where='hyper', append_string='', every=1):  # TODO this is initial (maybe bad)
+        # idea [getting better].
         """
-        Context manager for saver. saves statistics at the end of every hyperiteration
+        Context manager for saver. saves statistics at the end of every `where` (default hyperiteration)
 
         :param where:
         :param every:

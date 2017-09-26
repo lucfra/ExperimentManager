@@ -54,7 +54,7 @@ def tensor_to_images(prefix, tensor):
 
 def convert_mini_imagenet():
     for st in ['train', 'val', 'test']:
-        folder = os.path.join(em.load.MINI_IMAGENET_FOLDER, st)
+        folder = os.path.join(em.load.MINI_IMAGENET_FOLDER_RES84, st)
         classes = os.listdir(folder)
         files = []
         for c in classes:
@@ -67,7 +67,7 @@ def convert_mini_imagenet():
         print(img)
         print(img.dtype)
 
-        h5file = h5py.File(r'C:\Users\lfranceschi\DATASETS\imagenet\mini_res84\%s.h5' % st, 'w')
+        h5file = h5py.File(os.path.join(em.load.MINI_IMAGENET_FOLDER_RES84, '%s.h5' % st), 'w')
         X = h5file.create_dataset("X", (n, img_shape[0], img_shape[1], img_shape[2]), dtype=np.uint8)
         images_to_tensor(files, X)
 
