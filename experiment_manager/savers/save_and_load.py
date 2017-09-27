@@ -432,7 +432,7 @@ class Saver:
 
         :return: the dictionary
         """
-        import tensorflow as tf
+        import tensorflow
         from tensorflow import get_default_session
         if step is None:
             self._step += 1
@@ -451,26 +451,31 @@ class Saver:
         if self.timer: self.timer.stop()
 
         def _maybe_call(_method):
-            if not callable(_method): return _method
-            if len(signature(_method).parameters) == 0:
-                _out = _method()
-            elif len(signature(_method).parameters) == 1:
-                _out = _method(step)
-            elif len(signature(_method).parameters) == 2:
-                _out = _method(step, _res)  # internal usage...
-            else:  # complete signature?
-                _out = _method(step, _res, self)
-            return _maybe_call(_out) if callable(_out) else _out
+            try:
+                if not callable(_method): return _method
+                if len(signature(_method).parameters) == 0:
+                    _out = _method()
+                elif len(signature(_method).parameters) == 1:
+                    _out = _method(step)
+                elif len(signature(_method).parameters) == 2:
+                    _out = _method(step, _res)  # internal usage...
+                else:  # complete signature?
+                    _out = _method(step, _res, self)
+                return _maybe_call(_out) if callable(_out) else _out
+            except:
+                return 'Exception occured'
 
         def _tf_run_catch_not_initialized(_pt):
 
             try:
                 return ss.run(_pt[1], feed_dict=_maybe_call(_pt[2]),
                               options=_pt[4], run_metadata=_pt[5])
-            except tf.errors.FailedPreconditionError:
+            except tensorflow.errors.FailedPreconditionError:
                 return 'Not initialized'
             except KeyError:
                 return 'Feed dict not found'
+            except:
+                return 'Other exception'
 
         def _compute_value(pt):
             if _maybe_call(pt[2 if callable(pt[1]) else 3]):

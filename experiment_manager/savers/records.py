@@ -76,7 +76,7 @@ class on_hyperiteration:
             if first_init:
                 self._processed_items += rf.flatten_list(
                     [Saver.process_items(*e(*args, **kwargs)) for e in self._record_what])
-                self._execute_save('INIT', *args, **kwargs)
+                # self._execute_save('INIT', *args, **kwargs)
 
             return first_init
 
