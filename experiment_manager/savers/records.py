@@ -334,8 +334,9 @@ def model(_model, condition=True):
     :return:
     """
     def _save_model(step, _, _saver):
-        _saver.save_model(_model, step=step)
-        return 'SAVED'
+        if _saver.collect_data:
+            _saver.save_model(_model, step=step)
+            return 'SAVED'
     return direct('Model', _save_model, condition)
 
 
