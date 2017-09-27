@@ -136,22 +136,22 @@ def load_text(name, root_dir=None, notebook_mode=True):
         return f.read()
 
 
-def save_model(session, model, step, root_dir=None, notebook_mode=True):
+def save_model(model, step=None, session=None, root_dir=None, notebook_mode=True):
     if root_dir is None: root_dir = os.getcwd()
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['MODELS_DIR']),
                                     notebook_mode=notebook_mode)
 
     filename = join_paths(directory, '%s' % model.name)
-    model.saver.save(session, filename, global_step=step)
+    model.save(filename, session=session, global_step=step)
 
 
-def load_model(session, model, step, root_dir=None, notebook_mode=True):
+def restore_model(model, step=None, session=None, root_dir=None, notebook_mode=True):
     if root_dir is None: root_dir = os.getcwd()
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['MODELS_DIR']),
                                     notebook_mode=notebook_mode, create=False)
 
     filename = join_paths(directory, model.name)
-    model.saver.restore(session, filename + "-" + str(step))
+    model.restore(filename, session=session, global_step=step)
 
 
 def save_adjacency_matrix_for_gephi(matrix, name, root_dir=None, notebook_mode=True, class_names=None):
@@ -303,7 +303,7 @@ class Saver:
         experiment_names = as_list(experiment_names)
         if append_date_to_name:
             from datetime import datetime
-            experiment_names += [str(time.time()) + '__' + datetime.today().strftime('%d-%m-%y__%Hh%Mm')]
+            experiment_names += [str(int(time.time())) + '__' + datetime.today().strftime('%d-%m-%y__%Hh%Mm')]
         self.experiment_names = list(experiment_names)
 
         if not os.path.isabs(experiment_names[0]):
@@ -631,11 +631,11 @@ class Saver:
         """
         return load_obj(name, root_dir=self.directory, notebook_mode=False)
 
-    def save_model(self, session, model, step):
-        save_model(session, model, step, root_dir=self.directory, notebook_mode=False)
+    def save_model(self, model, step=None, session=None):
+        save_model(model, step=step, session=session, root_dir=self.directory, notebook_mode=False)
 
-    def load_model(self, session, model, step):
-        load_model(session, model, step, root_dir=self.directory)
+    def restore_model(self, model, step=None, session=None):
+        restore_model(model, step=step, session=session, root_dir=self.directory, notebook_mode=False)
 
     def open(self, filename, mode):
         return open(join_paths(self.directory, filename), mode)

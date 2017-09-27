@@ -43,5 +43,6 @@ def to_one_hot_enc(seq, dimension=None):
 
 def filter_vars(var_name, scope):
     import tensorflow as tf
-    return [v for v in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope=scope.name) if v.name.endswith('%s:0' % var_name)]
+    return [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+                                         scope=scope.name if hasattr(scope, 'name') else scope)
+            if v.name.endswith('%s:0' % var_name)]

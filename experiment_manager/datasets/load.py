@@ -6,6 +6,8 @@ import numpy as np
 import threading
 import h5py
 
+from experiment_manager.datasets.utils import redivide_data
+
 from_env = os.getenv('RFHO_DATA_FOLDER')
 if from_env:
     DATA_FOLDER = from_env
@@ -163,6 +165,25 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
                                        info={'all_classes': random_classes}))
             return em.Datasets.from_list(_dts)
 
+        def all_data(self, partition_proportions=None, seed=None):
+            if not self._loaded_images:
+                self.load_all_images()
+                while not self.check_loaded_images(600):
+                    time.sleep(5)
+            data, targets = [], []
+            for k, c in enumerate(sorted(self._loaded_images)):
+                data += list(self._loaded_images[c].values())
+                targets += [k]*600
+            if self.info['one_hot_enc']:
+                targets = em.to_one_hot_enc(targets, dimension=len(self._loaded_images))
+            _dts = [em.Dataset(data=np.stack(data), target=np.array(targets))]
+            if seed:
+                np.random.seed(seed)
+            if partition_proportions:
+                _dts = redivide_data(_dts, partition_proportions=partition_proportions,
+                                     shuffle=True)
+            return em.Datasets.from_list(_dts)
+
     if sub_folders is None: sub_folders = ['train', 'val', 'test']
     meta_dts = []
     for ds in sub_folders:
@@ -195,4 +216,4 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
 if __name__ == '__main__':
     mmi = meta_mini_imagenet()
     ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
-    print()
+    mmi.train.all_data()

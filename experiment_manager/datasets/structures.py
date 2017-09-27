@@ -1,6 +1,8 @@
-from functools import reduce
-
 import numpy as np
+from experiment_manager.utils import merge_dicts
+
+from experiment_manager.datasets.utils import _maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
+    convert_sparse_matrix_to_sparse_tensor
 
 
 class Datasets:
@@ -54,27 +56,7 @@ class Datasets:
                                    for k in range(3)])
 
 
-def _maybe_cast_to_scalar(what):
-    return what[0] if len(what) == 1 else what
-
-
-def convert_sparse_matrix_to_sparse_tensor(X):
-    import tensorflow as tf
-    import scipy.sparse as sc_sp
-    if isinstance(X, sc_sp.csr.csr_matrix):
-        coo = X.tocoo()
-        indices = np.mat([coo.row, coo.col]).transpose()
-    else:
-        coo, indices = X, [X.row, X.col]
-    # data = np.array(coo.data, dtype=)
-    return tf.SparseTensor(indices, tf.constant(coo.data, dtype=tf.float32), coo.shape)
-
-
 NAMED_SUPPLIER = {}
-
-
-def merge_dicts(*dicts):
-    return reduce(lambda a, nd: {**a, **nd}, dicts, {})
 
 
 class Dataset:
@@ -240,26 +222,6 @@ class MetaDataset(Dataset):
     @property
     def dim_target(self, *args, **kwargs):
         return self.generate_datasets(*args, **kwargs).train.dim_target
-
-
-def stack_or_concat(list_of_arays):
-    func = np.concatenate if list_of_arays[0].ndim == 1 else np.vstack
-    return func(list_of_arays)
-
-
-def vstack(lst):
-    """
-    Vstack that considers sparse matrices
-
-    :param lst:
-    :return:
-    """
-    import scipy.sparse as sc_sp
-    import scipy as sp
-    return sp.vstack(lst) if sp and isinstance(lst[0], sc_sp.csr.csr_matrix) else np.vstack(lst)
-
-
-def pad(_example, _size): return np.concatenate([_example] * _size)
 
 
 class WindowedData(object):

@@ -256,7 +256,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
                                        if nc in n.name] for nc in as_list(name_contains)])
             return _tensors(*_names, rec_name=rec_name, op=op, fd=fd, condition=True)(*args, **_kwargs)
         else:
-            raise NotImplemented('One between key and names should be given')
+            raise NotImplemented
 
         if rec_name: rec_name += '::'  # maybe find a better way
 
@@ -327,13 +327,16 @@ def number_of_nodes(condition=True):
     return _call
 
 
-def model():  # TODO discuss with others to see what's best way to save models...
+def model(_model, condition=True):
     """
     Should save the model(s) in a useful way..
 
     :return:
     """
-    raise NotImplemented()
+    def _save_model(step, _, _saver):
+        _saver.save_model(_model, step=step)
+        return 'SAVED'
+    return direct('Model', _save_model, condition)
 
 
 def setting():  # TODO I have no precise idea on how to implement this...

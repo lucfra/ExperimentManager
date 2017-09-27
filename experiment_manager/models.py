@@ -38,7 +38,7 @@ class Network(object):
         self.var_list = []
 
         self.s = None
-        self.saver = None
+        self._tf_saver = None
 
     def for_input(self, y, new_name):
         pass
@@ -49,7 +49,8 @@ class Network(object):
     def _std_collections(self, scope=None):
         self.Ws = self.filter_vars('weights', scope)
         self.bs = self.filter_vars('biases', scope)
-        self.var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
+        self.var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                          scope.name if hasattr(scope, 'name') else scope)
 
     def initialize(self, session=None):
         """
@@ -94,11 +95,18 @@ class Network(object):
         self.s = res[0]
         return res
 
-    def set_saver(self):
-        self.saver = tf.train.Saver(var_list=self.var_list)
+    def _variables_to_save(self):
+        return self.var_list
 
-    def save(self, sess, step):
-        self.saver.save(sess, self.name, global_step=step)
+    @property
+    def tf_saver(self):
+        if not self._tf_saver:
+            self._tf_saver = tf.train.Saver(var_list=self._variables_to_save())
+        return self._tf_saver
 
-    def load(self, sess, step):
-        self.saver.restore(sess, self.name + "-" + str(step))
+    def save(self, file_path, session=None, global_step=None):
+        self.tf_saver.save(session or tf.get_default_session(), file_path, global_step=global_step)
+
+    def restore(self, file_path, session=None, global_step=None):
+        if global_step: file_path += '-' + str(global_step)
+        self.tf_saver.restore(session or tf.get_default_session(), file_path)
