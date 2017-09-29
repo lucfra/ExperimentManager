@@ -40,7 +40,7 @@ class Network(object):
         self.s = None
         self._tf_saver = None
 
-    def for_input(self, y, new_name):
+    def for_input(self, new_input):
         pass
 
     def filter_vars(self, var_name, scope=None):
