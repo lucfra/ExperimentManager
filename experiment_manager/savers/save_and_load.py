@@ -290,7 +290,7 @@ class Saver:
         :param collect_data: (optional, default True) will save by default `save_dict` each time
                             method `save` is executed
         """
-        self.last_save_dict = None
+        self.last_record = None
         if ask_for_description:
             description = input('Experiment description:')
             if description == 'SKIP':
@@ -503,7 +503,7 @@ class Saver:
 
         if self.timer: self.timer.start()
 
-        self.last_save_dict = save_dict
+        self.last_record = save_dict
 
         return save_dict
 
