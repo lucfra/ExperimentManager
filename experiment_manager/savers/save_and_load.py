@@ -451,19 +451,16 @@ class Saver:
         if self.timer: self.timer.stop()
 
         def _maybe_call(_method):
-            try:
-                if not callable(_method): return _method
-                if len(signature(_method).parameters) == 0:
-                    _out = _method()
-                elif len(signature(_method).parameters) == 1:
-                    _out = _method(step)
-                elif len(signature(_method).parameters) == 2:
-                    _out = _method(step, _res)  # internal usage...
-                else:  # complete signature?
-                    _out = _method(step, _res, self)
-                return _maybe_call(_out) if callable(_out) else _out
-            except:
-                return 'Exception occured'
+            if not callable(_method): return _method
+            if len(signature(_method).parameters) == 0:
+                _out = _method()
+            elif len(signature(_method).parameters) == 1:
+                _out = _method(step)
+            elif len(signature(_method).parameters) == 2:
+                _out = _method(step, _res)  # internal usage...
+            else:  # complete signature?
+                _out = _method(step, _res, self)
+            return _maybe_call(_out) if callable(_out) else _out
 
         def _tf_run_catch_not_initialized(_pt):
 
@@ -474,8 +471,6 @@ class Saver:
                 return 'Not initialized'
             except KeyError:
                 return 'Feed dict not found'
-            except:
-                return 'Other exception'
 
         def _compute_value(pt):
             if _maybe_call(pt[2 if callable(pt[1]) else 3]):
