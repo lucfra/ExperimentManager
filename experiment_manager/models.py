@@ -34,11 +34,14 @@ class Network(object):
         self.Ws = []
         self.bs = []
         self.inp = [_input]
-        self.out = None  # for convenience
         self.var_list = []
 
         self.s = None
         self._tf_saver = None
+
+    @property
+    def out(self):
+        return self.inp[-1]
 
     def for_input(self, new_input):
         pass
