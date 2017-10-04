@@ -394,3 +394,25 @@ def _process_feed_dicts_for_rec(fd, *args, **kwargs):
         return _rs
 
     return _fds
+
+
+class SMOS:
+    """
+    Save model on score"""
+
+    def __init__(self, score_name, compare=None, init_best=-np.inf):
+        self.score_name = score_name
+        self.previous_score = init_best
+
+        if not compare:
+            compare = lambda ps, ns: ns > ps
+
+        self.compare = compare
+
+    def __call__(self, stp, _, saver):
+        score = saver.last_record[self.score_name]
+        if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
+            if self.compare(self.previous_score, score):
+                self.previous_score = score
+                return True
+        else: return False
