@@ -458,7 +458,7 @@ class Saver:
 
         if self.timer: self.timer.stop()
 
-        def _maybe_call(_method):
+        def _maybe_call(_method, _partial_save_dict):
             if not callable(_method): return _method
             if len(signature(_method).parameters) == 0:
                 _out = _method()
@@ -466,27 +466,32 @@ class Saver:
                 _out = _method(step)
             elif len(signature(_method).parameters) == 2:
                 _out = _method(step, _res)  # internal usage...
-            else:  # complete signature?
+            elif len(signature(_method).parameters) == 3:
                 _out = _method(step, _res, self)
-            return _maybe_call(_out) if callable(_out) else _out
+            else:
+                _out = _method(step, _res, self, _partial_save_dict)
+            return _maybe_call(_out, _partial_save_dict) if callable(_out) else _out
 
-        def _tf_run_catch_not_initialized(_pt):
+        def _tf_run_catch_not_initialized(_pt, _partial_save_dict):
 
             try:
-                return ss.run(_pt[1], feed_dict=_maybe_call(_pt[2]),
+                return ss.run(_pt[1], feed_dict=_maybe_call(_pt[2], _partial_save_dict),
                               options=_pt[4], run_metadata=_pt[5])
             except tensorflow.errors.FailedPreconditionError:
                 return 'Not initialized'
             except KeyError:
                 return 'Feed dict not found'
 
-        def _compute_value(pt):
-            if _maybe_call(pt[2 if callable(pt[1]) else 3]):
-                return _maybe_call(pt[1]) if callable(pt[1]) else _tf_run_catch_not_initialized(pt)
+        def _compute_value(pt, _partial_save_dict):
+            if _maybe_call(pt[2 if callable(pt[1]) else 3], _partial_save_dict):
+                return _maybe_call(pt[1], _partial_save_dict) \
+                    if callable(pt[1]) else _tf_run_catch_not_initialized(pt, _partial_save_dict)
             else:
                 return Saver.SKIP
 
-        save_dict = OrderedDict([(pt[0], _compute_value(pt)) for pt in processed_items])
+        save_dict = OrderedDict()
+        for pt in processed_items:
+            save_dict[pt[0]] = _compute_value(pt, save_dict)
 
         if self.timer: save_dict['Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
 

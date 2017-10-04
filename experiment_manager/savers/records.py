@@ -7,6 +7,7 @@ import numpy as np
 from functools import wraps
 from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list
+import sys
 
 from experiment_manager.datasets.structures import NAMED_SUPPLIER
 
@@ -409,9 +410,12 @@ class SMOS:
 
         self.compare = compare
 
-    def __call__(self, stp, _, saver):
-        if not saver.last_record: return False  # nothing yet
-        score = saver.last_record[self.score_name]
+    def __call__(self, stp, _, saver, _partial_record):
+        # if not _partial_record: return False  # nothing yet
+        if self.score_name not in _partial_record:
+            print('SMOS warning: %s not found in partial_record, score must be computed before this',
+                  file=sys.stderr)
+        score = _partial_record[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
             if self.compare(self.previous_score, score):
                 self.previous_score = score
