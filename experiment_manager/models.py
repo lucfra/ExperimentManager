@@ -1,5 +1,5 @@
-import rfho as rf
 import tensorflow as tf
+import sys
 
 from experiment_manager import filter_vars
 
@@ -9,7 +9,7 @@ class Network(object):
     Base object for models
     """
 
-    def __init__(self, _input, name, deterministic_initialization=False, reuse=False):
+    def __init__(self, _input, name=None, deterministic_initialization=False, reuse=False):
         """
         Creates an object that represent a network. Important attributes of a Network object are
 
@@ -22,6 +22,11 @@ class Network(object):
         """
         super(Network, self).__init__()
 
+        if not name:
+            try:
+                name = tf.get_variable_scope().name
+            except IndexError:
+                print('Warning: no name and no variable scope given', sys.stderr)
         self.name = name
         self.reuse = reuse
 
@@ -31,13 +36,32 @@ class Network(object):
         self._assign_int = []
         self._var_initializer_op = None
 
-        self.Ws = []
-        self.bs = []
         self.inp = [_input]
-        self.var_list = []
-
-        self.s = None
+        # self.s = None
         self._tf_saver = None
+
+        with tf.variable_scope(self.name, reuse=reuse):
+            self._build()
+
+    def __getitem__(self, item):
+        return self.inp[item]
+
+    def __add__(self, other):
+        assert self.name in tf.get_variable_scope().name, 'use this inside _build() method'
+        self.inp.append(other)
+        return self
+
+    @property
+    def var_list(self):
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.name)
+
+    @property
+    def Ws(self):
+        return self.filter_vars('weights')
+
+    @property
+    def bs(self):
+        return self.filter_vars('biases')
 
     @property
     def out(self):
@@ -46,14 +70,8 @@ class Network(object):
     def for_input(self, new_input):
         pass
 
-    def filter_vars(self, var_name, scope=None):
-        return filter_vars(var_name, scope or self.name)
-
-    def _std_collections(self, scope=None):
-        self.Ws = self.filter_vars('weights', scope)
-        self.bs = self.filter_vars('biases', scope)
-        self.var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                          scope.name if hasattr(scope, 'name') else scope)
+    def filter_vars(self, var_name):
+        return filter_vars(var_name, self.name)
 
     def initialize(self, session=None):
         """
@@ -82,24 +100,27 @@ class Network(object):
                 [ss.run(v_op, feed_dict={self._var_init_placeholder: val})
                  for v_op, val in zip(self._assign_int, self._var_list_initial_values)]
 
-    def vectorize(self, *outs, augment=0):
-        """
-        Calls `vectorize_model` with the variables of this model and specified outputs.
-        Moreover it registers this model on the resulting `MergedVariable` and the resulting merged variable
-        in the model as the attribute `self.w`.
-        (See `vectorize_model` and `mergedVariable`)
-
-        :param outs: tensors
-        :param augment:
-        :return:
-        """
-        res = rf.vectorize_model(self.var_list, *outs, augment=augment)
-        res[0].model = self
-        self.s = res[0]
-        return res
+    # def vectorize(self, *outs, augment=0):
+    #     """
+    #     Calls `vectorize_model` with the variables of this model and specified outputs.
+    #     Moreover it registers this model on the resulting `MergedVariable` and the resulting merged variable
+    #     in the model as the attribute `self.w`.
+    #     (See `vectorize_model` and `mergedVariable`)
+    #
+    #     :param outs: tensors
+    #     :param augment:
+    #     :return:
+    #     """
+    #     res = rf.vectorize_model(self.var_list, *outs, augment=augment)
+    #     res[0].model = self
+    #     self.s = res[0]
+    #     return res
 
     def _variables_to_save(self):
         return self.var_list
+
+    def _build(self):
+        pass
 
     @property
     def tf_saver(self):
@@ -113,3 +134,16 @@ class Network(object):
     def restore(self, file_path, session=None, global_step=None):
         if global_step: file_path += '-' + str(global_step)
         self.tf_saver.restore(session or tf.get_default_session(), file_path)
+
+
+if __name__ == '__main__':
+    import tensorflow.contrib.layers as tcl
+    x = tf.placeholder(tf.float32, shape=(10, 321))
+    with tf.variable_scope('hji'):
+        net = Network(x)
+        net + tcl.fully_connected(net.out, 40) + tcl.fully_connected(net.out, 51) + tcl.fully_connected(
+            net.out, 12
+        ) + tcl.fully_connected(net.out, 1)
+
+    print(net.inp)
+    print(net.var_list)

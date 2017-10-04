@@ -62,7 +62,11 @@ def check_or_create_dir(directory, notebook_mode=True, create=True):
     return directory
 
 
-def save_fig(name, root_dir=None, notebook_mode=True, default_overwrite=False, extension='pdf', **savefig_kwargs):
+def save_fig(name=None, root_dir=None, notebook_mode=True, default_overwrite=False, extension='pdf', **savefig_kwargs):
+    if name is None:
+        name = plt.gca().get_title()
+    assert name is not None, 'no title found in the current axis, set it manually!'
+
     if root_dir is None: root_dir = os.getcwd()
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['PLOTS_DIR']),
                                     notebook_mode=notebook_mode)
@@ -116,14 +120,18 @@ def save_text(text, name, root_dir=None, notebook_mode=True, default_overwrite=F
         text_file.write(text)
 
 
+def pkgz_load(filename):
+    with gzip.open(filename, 'rb') as f:
+        return pickle.load(f)
+
+
 def load_obj(name, root_dir=None, notebook_mode=True):
     if root_dir is None: root_dir = os.getcwd()
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['OBJ_DIR']),
                                     notebook_mode=notebook_mode, create=False)
 
     filename = join_paths(directory, name if name.endswith('.pkgz') else name + '.pkgz')
-    with gzip.open(filename, 'rb') as f:
-        return pickle.load(f)
+    return pkgz_load(filename)
 
 
 def load_text(name, root_dir=None, notebook_mode=True):
@@ -572,7 +580,7 @@ class Saver:
         return save_text(text=text, name=name, root_dir=self.directory, default_overwrite=self.default_overwrite,
                          notebook_mode=False)
 
-    def save_fig(self, name, extension='pdf', **savefig_kwargs):
+    def save_fig(self, name=None, extension='pdf', **savefig_kwargs):
         """
         Object-oriented version of `save_fig`
 
