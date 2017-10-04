@@ -410,6 +410,7 @@ class SMOS:
         self.compare = compare
 
     def __call__(self, stp, _, saver):
+        if not saver.last_record: return False  # nothing yet
         score = saver.last_record[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
             if self.compare(self.previous_score, score):
