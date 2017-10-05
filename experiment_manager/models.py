@@ -36,7 +36,7 @@ class Network(object):
         self._assign_int = []
         self._var_initializer_op = None
 
-        self.layer = [_input]
+        self.layers = [_input]
         # self.s = None
         self._tf_saver = None
 
@@ -44,11 +44,11 @@ class Network(object):
             self._build()
 
     def __getitem__(self, item):
-        return self.layer[item]
+        return self.layers[item]
 
     def __add__(self, other):
         assert self.name in tf.get_variable_scope().name, 'use this inside _build() method'
-        self.layer.append(other)
+        self.layers.append(other)
         return self
 
     @property
@@ -65,7 +65,7 @@ class Network(object):
 
     @property
     def out(self):
-        return self.layer[-1]
+        return self.layers[-1]
 
     def for_input(self, new_input):
         pass
@@ -145,5 +145,5 @@ if __name__ == '__main__':
             net.out, 12
         ) + tcl.fully_connected(net.out, 1)
 
-    print(net.layer)
+    print(net.layers)
     print(net.var_list)
