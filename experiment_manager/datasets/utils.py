@@ -143,7 +143,7 @@ def test_if_balanced(dataset):
     print('exemple by class: ', class_counter)
 
 
-def _maybe_cast_to_scalar(what):
+def maybe_cast_to_scalar(what):
     return what[0] if len(what) == 1 else what
 
 

@@ -401,23 +401,75 @@ class COS:
     """
     Condition on score"""
 
-    def __init__(self, score_name, compare=None, init_best=-np.inf):
-        self.score_name = score_name
+    def __init__(self, score, comparator=None, init_best=-np.inf):
+        self.score_name = score  # TODO score could be a function or a tensor
         self.previous_score = init_best
 
-        if not compare:
-            compare = lambda ps, ns: ns > ps
+        if not comparator:
+            comparator = lambda ps, ns: ns > ps
 
-        self.compare = compare
+        self.comparator = comparator
 
     def __call__(self, stp, _, saver, _partial_record):
         # if not _partial_record: return False  # nothing yet
-        if self.score_name not in _partial_record:
+        return self._check_for_improvements(_partial_record)
+
+    def early_stopping_sv(self, saver, patience, start=0, stop=None, step=1):
+        """
+        early stopping step generator, based on a saver.
+        It considers only steps in which saver.last_record is updated.
+
+        :param saver: saver instance
+        :param patience: how many
+        :param start: (default 0) initial value of step
+        :param stop:  (default None) max value of step, None stands for no limit
+        :param step:  (default 1) increase of iterator
+        :return:
+        """
+        remaining_patience = patience
+        _keep_record = saver.last_record
+        t = start
+        while remaining_patience > 0 and (stop is None or t < stop):
+            yield t
+            if saver.last_record != _keep_record:
+                _keep_record = saver.last_record
+                improved = self._check_for_improvements(_keep_record)
+                if improved is False:
+                    remaining_patience -= 1
+                elif improved is True:
+                    remaining_patience = patience
+            t += step
+
+    def _check_for_improvements(self, _records):
+        """
+
+        :param _records: dictionary that (should have) a key given by score_name
+        :return: True if there has been an improvement, False if there was no improvement and None
+                  if score was unavailable for some reason
+        """
+        if _records is None: return None
+        if self.score_name not in _records:
             print('COS warning: %s not found in partial_record, score must be computed before this',
                   file=sys.stderr)
-        score = _partial_record[self.score_name]
+        score = _records[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
-            if self.compare(self.previous_score, score):
+            if self.comparator(self.previous_score, score):
                 self.previous_score = score
                 return True
-        else: return False
+            else: return False
+        else: return None
+
+
+if __name__ == '__main__':
+    import time
+    random_number = lambda: np.random.randint(0, 20)
+    cos = COS('rn')
+    _sv = Saver(['tbd'], 'rn', random_number, lambda st: st % 2 == 0, collect_data=False,
+                ask_for_description=False)
+    for _t in cos.early_stopping_sv(_sv, 3):
+        if np.random.randint(2):
+            _sv.save(_t)
+        else:
+            print(_t, 'nothing here')
+        time.sleep(1)
+

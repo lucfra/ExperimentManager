@@ -1,7 +1,10 @@
 import numpy as np
-from experiment_manager.utils import merge_dicts
+import sys
 
-from experiment_manager.datasets.utils import _maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
+from experiment_manager.utils import merge_dicts
+import scipy.sparse as sc_sp
+
+from experiment_manager.datasets.utils import maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
     convert_sparse_matrix_to_sparse_tensor
 
 
@@ -128,7 +131,7 @@ class Dataset:
 
         :return: The data dimensionality as an integer, if input are vectors, or a tuple in the general case
         """
-        return _maybe_cast_to_scalar(self._shape(self.data)[1:])
+        return maybe_cast_to_scalar(self._shape(self.data)[1:])
 
     @property
     def dim_target(self):
@@ -137,10 +140,10 @@ class Dataset:
         :return: The target dimensionality as an integer, if targets are vectors, or a tuple in the general case
         """
         shape = self._shape(self.target)
-        return 1 if len(shape) == 1 else _maybe_cast_to_scalar(shape[1:])
+        return 1 if len(shape) == 1 else maybe_cast_to_scalar(shape[1:])
 
     def convert_to_tensor(self, keep_sparse=True):
-        import scipy.sparse as sc_sp
+
         import tensorflow as tf
         SPARSE_SCIPY_MATRICES = (sc_sp.csr.csr_matrix, sc_sp.coo.coo_matrix)
         matrices = ['_data', '_target']
@@ -197,7 +200,6 @@ class Dataset:
 
 
 class MetaDataset(Dataset):
-
     def __init__(self, info=None, *args, **kwargs):
         super().__init__(None, None, None, info)
         self.args = args
@@ -333,8 +335,12 @@ class ExampleVisiting:
             return _res
 
         # noinspection PyUnusedLocal
-        self.training_schedule = np.concatenate([all_indices_shuffled()
-                                                 for _ in range(self.epochs or 1)])
+        _tmp_ts = np.concatenate([all_indices_shuffled()
+                                  for _ in range(self.epochs or 1)])
+        self.training_schedule = _tmp_ts if self.training_schedule is None else \
+            np.concatenate([self.training_schedule, _tmp_ts])  # do not discard previous schedule,
+        # this should allow backward passes of arbitrary length
+
         return self
 
     def create_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
@@ -344,6 +350,7 @@ class ExampleVisiting:
     def create_feed_dict_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
         """
 
+        :param name: optional name for this supplier
         :param x: placeholder for independent variable
         :param y: placeholder for dependent variable
         :param lambda_feeds: dictionary of placeholders: number_of_example -> substitution
@@ -365,7 +372,7 @@ class ExampleVisiting:
                 if step % self.T == 0:
                     if self.epochs:
                         print('WARNING: End of the training scheme reached.'
-                              'Generating another scheme.')
+                              'Generating another scheme.', file=sys.stderr)
                     self.generate_visiting_scheme()
                 step %= self.T
 
@@ -389,4 +396,3 @@ class ExampleVisiting:
             NAMED_SUPPLIER[name] = _training_supplier
 
         return _training_supplier
-
