@@ -47,7 +47,8 @@ class Network(object):
         return self.layers[item]
 
     def __add__(self, other):
-        assert self.name in tf.get_variable_scope().name, 'use this inside _build() method'
+        if self.name not in tf.get_variable_scope().name:
+            print('Warning: adding layers outside model variable scope', file=sys.stderr)
         self.layers.append(other)
         return self
 
@@ -138,6 +139,7 @@ class Network(object):
 
 if __name__ == '__main__':
     import tensorflow.contrib.layers as tcl
+
     x = tf.placeholder(tf.float32, shape=(10, 321))
     with tf.variable_scope('hji'):
         net = Network(x)
