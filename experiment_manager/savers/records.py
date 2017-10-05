@@ -397,9 +397,9 @@ def _process_feed_dicts_for_rec(fd, *args, **kwargs):
     return _fds
 
 
-class SMOS:
+class COS:
     """
-    Save model on score"""
+    Condition on score"""
 
     def __init__(self, score_name, compare=None, init_best=-np.inf):
         self.score_name = score_name
@@ -413,7 +413,7 @@ class SMOS:
     def __call__(self, stp, _, saver, _partial_record):
         # if not _partial_record: return False  # nothing yet
         if self.score_name not in _partial_record:
-            print('SMOS warning: %s not found in partial_record, score must be computed before this',
+            print('COS warning: %s not found in partial_record, score must be computed before this',
                   file=sys.stderr)
         score = _partial_record[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
