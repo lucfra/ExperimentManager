@@ -406,15 +406,22 @@ class COS:
     def __init__(self, score, comparator=None, init_best=-np.inf):
         self.score_name = score  # TODO score could be a function or a tensor
         self.previous_score = init_best
+        self._init_best = init_best
+        self._comparator = comparator
 
         if not comparator:
             comparator = lambda ps, ns: ns > ps
 
         self.comparator = comparator
 
-    def __call__(self, stp, _, saver, _partial_record):
-        # if not _partial_record: return False  # nothing yet
-        return self._check_for_improvements(_partial_record)
+    def condition(self):
+        _cos = COS(self.score_name, self.comparator, self._init_best)
+
+        def _call(stp, _, saver, _partial_record):
+            # if not _partial_record: return False  # nothing yet
+            return _cos._check_for_improvements(_partial_record)
+
+        return _call
 
     def early_stopping_sv(self, saver, patience, start=0, stop=None, step=1, _debug=False):
         """
@@ -428,6 +435,7 @@ class COS:
         :param step:  (default 1) increase of iterator
         :return:
         """
+        _cos = COS(self.score_name, self.comparator, self._init_best)
         remaining_patience = patience
         _keep_record = saver.last_record
         t = start
@@ -436,7 +444,7 @@ class COS:
             if saver.last_record != _keep_record:
                 if _debug: print('last_record changed')
                 _keep_record = saver.last_record
-                improved = self._check_for_improvements(_keep_record)
+                improved = _cos._check_for_improvements(_keep_record)
                 if _debug: print('improved', improved)
                 if improved is False:
                     remaining_patience -= 1
@@ -471,7 +479,7 @@ if __name__ == '__main__':
     cos = COS('rn')
     _sv = Saver(['tbd'], 'rn', random_number, lambda st: st % 2 == 0, collect_data=False,
                 ask_for_description=False)
-    for _t in cos.early_stopping_sv(_sv, 3):
+    for _t in cos.early_stopping_sv(_sv, 3, _debug=True):
         if np.random.randint(2):
             _sv.save(_t)
         else:
