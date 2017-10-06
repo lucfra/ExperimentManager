@@ -4,6 +4,7 @@ import h5py
 # from progressbar import ProgressBar, Percentage, Bar, ETA
 import os
 import experiment_manager as em
+import sys
 
 
 def img_to_array_old(image_file, resize=84, flip=False, convert_to_gray=False):
@@ -16,7 +17,7 @@ def img_to_array_old(image_file, resize=84, flip=False, convert_to_gray=False):
     if convert_to_gray:
         img_z = img_z.convert('L')
     ary = np.array(img_z)
-    ary = np.stack((ary,)*3, axis=2) if ary.ndim == 2 else ary  # some images are black and white
+    ary = np.stack((ary,) * 3, axis=2) if ary.ndim == 2 else ary  # some images are black and white
     return ary if ary.shape[-1] == 3 else ary[:, :, :3]  # some images have an alpha channel... (unbelievable...)
 
 
@@ -29,16 +30,16 @@ def img_to_array(imfile, resize=84):
     return img
 
 
-
 def images_to_tensor(files, tensor):
     # widgets = [Percentage(), ' ', Bar(), ' ', ETA()]
     # pbar = ProgressBar(widgets=widgets, maxval=len(files))
     # pbar.start()
     for i, f in enumerate(files):
         print(f)
-        tensor[i,:] = img_to_array(f)
+        tensor[i, :] = img_to_array(f)
         # pbar.update(i + 1)
-    # pbar.finish()
+        # pbar.finish()
+
 
 def tensor_to_images(prefix, tensor):
     n = tensor.shape[0]
@@ -47,14 +48,14 @@ def tensor_to_images(prefix, tensor):
     # pbar.start()
     for z in range(n):
         img = Image.fromarray(tensor[z].astype(np.int8), mode='L')
-        img.save(prefix+'%03d'%z+'.tif')
+        img.save(prefix + '%03d' % z + '.tif')
         # pbar.update(z + 1)
-    # pbar.finish()
+        # pbar.finish()
 
 
-def convert_mini_imagenet():
+def convert_mini_imagenet(folder=None):
     for st in ['train', 'val', 'test']:
-        folder = os.path.join(em.load.MINI_IMAGENET_FOLDER_RES84, st)
+        folder = os.path.join(folder or em.load.MINI_IMAGENET_FOLDER_RES84, st)
         classes = os.listdir(folder)
         files = []
         for c in classes:
@@ -67,13 +68,13 @@ def convert_mini_imagenet():
         print(img)
         print(img.dtype)
 
-        h5file = h5py.File(os.path.join(em.load.MINI_IMAGENET_FOLDER_RES84, '%s.h5' % st), 'w')
+        h5file = h5py.File(os.path.join(folder or em.load.MINI_IMAGENET_FOLDER_RES84, '%s.h5' % st), 'w')
         X = h5file.create_dataset("X", (n, img_shape[0], img_shape[1], img_shape[2]), dtype=np.uint8)
         images_to_tensor(files, X)
 
 
 if __name__ == '__main__':
-    convert_mini_imagenet()
+    convert_mini_imagenet(sys.argv[1] if len(sys.argv) > 1 else None)
     # base = '../vasculature_data'
     # orig_files = ['{}/orig/097000_164000_08600000{:0>2d}.tif'.format(base, z) for z in range(100)]
     # target_files = ['{}/GT/097000_164000_086000-labels-stack-intero-smooth00{:0>2d}.tif'.format(base, z) for z in range(100)]
@@ -93,5 +94,3 @@ if __name__ == '__main__':
     # orig_files = ['{}/orig/097000_164000_08600000{:0>2d}.tif'.format(base, z) for z in range(100)]
     # target_files = ['{}/GT/097000_164000_086000-labels-stack-intero-smooth00{:0>2d}.tif'.format(base, z) for z in
     #                 range(100)]
-
-
