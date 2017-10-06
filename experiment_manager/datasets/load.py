@@ -56,6 +56,7 @@ SCIKIT_LEARN_DATA = os.path.join(DATA_FOLDER, 'scikit_learn_data')
 
 MINI_IMAGENET_FOLDER = join(DATA_FOLDER, join('imagenet', 'mini_v1'))
 MINI_IMAGENET_FOLDER_RES84 = join(DATA_FOLDER, join('imagenet', 'mini_res84'))
+MINI_IMAGENET_FOLDER_V2 = join(DATA_FOLDER, join('imagenet', 'mini_v2'))
 
 
 def balanced_choice_wr(a, num):
@@ -65,7 +66,7 @@ def balanced_choice_wr(a, num):
     )
 
 
-def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_num_classes=None,
+def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V2, sub_folders=None, std_num_classes=None,
                        std_num_examples=None, resize=84, one_hot_enc=True, load_all_images=True, h5=True):
     """
     Load a meta-datasets from Mini-ImageNet. Returns a Datasets of MetaDatasets,
@@ -215,5 +216,13 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_RES84, sub_folders=None, std_
 
 if __name__ == '__main__':
     mmi = meta_mini_imagenet()
-    ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
-    mmi.train.all_data()
+    # ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
+    d1 = mmi.train.all_data(seed=0)
+    print(d1.train.dim_data, d1.train.dim_target)
+
+    mmiii = meta_mini_imagenet()
+    # ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
+    d2 = mmiii.train.all_data(seed=0)
+    print(d2.train.dim_data, d2.train.dim_target)
+
+    print(np.equal(d1.train.data[0], d2.train.data[1]))
