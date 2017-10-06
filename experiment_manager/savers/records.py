@@ -41,6 +41,8 @@ class on_hyperiteration:
                 self.saver.save_text(str((str(exc_type), str(exc_val), str(exc_tb))),
                                      'exception' + self.append_string)
 
+            if self.saver.timer:  # stops the timer... maybe you want to execute it again...
+                self.saver.timer.stop()
             self.saver.pack_save_dictionaries(append_string=self.append_string)
 
         self._unwrap()
@@ -414,7 +416,7 @@ class COS:
         # if not _partial_record: return False  # nothing yet
         return self._check_for_improvements(_partial_record)
 
-    def early_stopping_sv(self, saver, patience, start=0, stop=None, step=1):
+    def early_stopping_sv(self, saver, patience, start=0, stop=None, step=1, _debug=False):
         """
         early stopping step generator, based on a saver.
         It considers only steps in which saver.last_record is updated.
@@ -432,12 +434,15 @@ class COS:
         while remaining_patience > 0 and (stop is None or t < stop):
             yield t
             if saver.last_record != _keep_record:
+                if _debug: print('last_record changed')
                 _keep_record = saver.last_record
                 improved = self._check_for_improvements(_keep_record)
+                if _debug: print('improved', improved)
                 if improved is False:
                     remaining_patience -= 1
                 elif improved is True:
                     remaining_patience = patience
+                print('remaining_patience', remaining_patience)
             t += step
 
     def _check_for_improvements(self, _records):
