@@ -340,7 +340,7 @@ def model(_model, condition=True):
         if _saver.collect_data:
             _saver.save_model(_model, step=step)
             return 'SAVED'
-    return direct('Model', _save_model, condition)
+    return direct('model::%.20s' % _model.name, _save_model, condition)
 
 
 def setting():  # TODO I have no precise idea on how to implement this...
@@ -405,7 +405,7 @@ class COS:
 
     def __init__(self, score, comparator=None, init_best=-np.inf):
         self.score_name = score  # TODO score could be a function or a tensor
-        self.previous_score = init_best
+        self.best = init_best
         self._init_best = init_best
         self._comparator = comparator
 
@@ -419,7 +419,9 @@ class COS:
 
         def _call(stp, _, saver, _partial_record):
             # if not _partial_record: return False  # nothing yet
-            return _cos._check_for_improvements(_partial_record)
+            res = _cos._check_for_improvements(_partial_record)
+            self.best = _cos.best
+            return res
 
         return _call
 
@@ -451,6 +453,7 @@ class COS:
                 elif improved is True:
                     remaining_patience = patience
                 print('remaining_patience', remaining_patience)
+                self.best = _cos.best  # update this object best score
             t += step
 
     def _check_for_improvements(self, _records):
@@ -466,8 +469,8 @@ class COS:
                   file=sys.stderr)
         score = _records[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
-            if self.comparator(self.previous_score, score):
-                self.previous_score = score
+            if self.comparator(self.best, score):
+                self.best = score
                 return True
             else: return False
         else: return None
