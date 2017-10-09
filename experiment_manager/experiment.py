@@ -26,14 +26,14 @@ class SLExperiment:
         [opt.initialize() if hasattr(opt, 'initialize') else ss.run(opt.initializer)
          for opt in self.optimizers.values()]
 
-    def std_records(self, hypers=True):
-        import experiment_manager.savers.records as rec
-        std_rec = [
-            rec.tensors(*self.errors.values(), *self.scores.values(), fd='train'),
-            rec.tensors(*self.errors.values(), *self.scores.values(), fd='valid'),
-            rec.tensors(*self.errors.values(), *self.scores.values(), fd='test')
-        ]
-        return std_rec if not hypers else std_rec + [rec.hyperparameters(), rec.hypergradients()]
+    # def std_records(self, hypers=True):  # TODO does not always work (when resetting default graph) check!
+    #     import experiment_manager.savers.records as rec
+    #     std_rec = [
+    #         rec.tensors(*self.errors.values(), *self.scores.values(), fd='train'),
+    #         rec.tensors(*self.errors.values(), *self.scores.values(), fd='valid'),
+    #         rec.tensors(*self.errors.values(), *self.scores.values(), fd='test')
+    #     ]
+    #     return std_rec if not hypers else std_rec + [rec.hyperparameters(), rec.hypergradients()]
 
     def mah(self, c):
         pass
