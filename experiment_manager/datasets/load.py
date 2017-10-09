@@ -54,9 +54,11 @@ REALSIM = os.path.join(DATA_FOLDER, "realsim")
 # scikit learn datasets
 SCIKIT_LEARN_DATA = os.path.join(DATA_FOLDER, 'scikit_learn_data')
 
+IMAGENET_BASE_FOLDER = join(DATA_FOLDER, 'imagenet')
 MINI_IMAGENET_FOLDER = join(DATA_FOLDER, join('imagenet', 'mini_v1'))
 MINI_IMAGENET_FOLDER_RES84 = join(DATA_FOLDER, join('imagenet', 'mini_res84'))
 MINI_IMAGENET_FOLDER_V2 = join(DATA_FOLDER, join('imagenet', 'mini_v2'))
+MINI_IMAGENET_FOLDER_V3 = join(DATA_FOLDER, join('imagenet', 'mini_v3'))
 
 
 def balanced_choice_wr(a, num):
@@ -66,7 +68,7 @@ def balanced_choice_wr(a, num):
     )
 
 
-def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V2, sub_folders=None, std_num_classes=None,
+def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num_classes=None,
                        std_num_examples=None, resize=84, one_hot_enc=True, load_all_images=True, h5=True):
     """
     Load a meta-datasets from Mini-ImageNet. Returns a Datasets of MetaDatasets,
@@ -225,4 +227,4 @@ if __name__ == '__main__':
     d2 = mmiii.train.all_data(seed=0)
     print(d2.train.dim_data, d2.train.dim_target)
 
-    print(np.equal(d1.train.data[0], d2.train.data[1]))
+    print(np.equal(d1.train.data[0], d2.train.data[0]))
