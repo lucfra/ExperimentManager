@@ -4,3 +4,4 @@ import experiment_manager.datasets.load as load
 from experiment_manager.savers.save_and_load import *
 from experiment_manager.datasets.utils import redivide_data
 from experiment_manager.search_strategies import *
+from experiment_manager.experiment import *
