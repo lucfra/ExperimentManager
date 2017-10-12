@@ -34,9 +34,9 @@ SAVE_SETTINGS = {
     'NOTEBOOK_TITLE': ''
 }
 
-EXP_ROOT_FOLDER = os.getenv('RFHO_EXP_FOLDER')
+EXP_ROOT_FOLDER = os.getenv('EXPERIMENTS_FOLDER')
 if EXP_ROOT_FOLDER is None:
-    print('Environment variable RFHO_EXP_FOLDER not found. Current directory will be used')
+    print('Environment variable EXPERIMENTS_FOLDER not found. Current directory will be used')
     EXP_ROOT_FOLDER = join_paths(os.getcwd(), 'Experiments')
 print('Experiment save directory is ', EXP_ROOT_FOLDER)
 

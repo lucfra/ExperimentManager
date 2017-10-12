@@ -8,27 +8,26 @@ import h5py
 
 from experiment_manager.datasets.utils import redivide_data
 
-from_env = os.getenv('RFHO_DATA_FOLDER')
+from_env = os.getenv('DATASETS_FOLDER')
 if from_env:
     DATA_FOLDER = from_env
-    # print('Congratulations, RFHO_DATA_FOLDER found!')
 else:
-    print('Environment variable RFHO_DATA_FOLDER not found. Variables HELP_WIN and HELP_UBUNTU contain info.')
+    print('Environment variable DATASETS_FOLDER not found. Variables HELP_WIN and HELP_UBUNTU contain info.')
     DATA_FOLDER = os.getcwd()
-    _COMMON_BEGIN = "You can set environment variable RFHO_DATA_FOLDER to" \
+    _COMMON_BEGIN = "You can set environment variable DATASETS_FOLDER to" \
                     "specify root folder in which you store various datasets. \n"
     _COMMON_END = """\n
     You can also skip this step... \n
     In this case all load_* methods take a FOLDER path as first argument. \n
     Bye."""
     HELP_UBUNTU = _COMMON_BEGIN + """
-    Bash command is: export RFHO_DATA_FOLDER='absolute/path/to/dataset/folder \n
+    Bash command is: export DATASETS_FOLDER='absolute/path/to/dataset/folder \n
     Remember! To add the global variable kinda permanently in your system you should add export command in
           bash.bashrc file located in etc folder.
     """ + _COMMON_END
 
     HELP_WIN = _COMMON_BEGIN + """
-    Cmd command is: Set RFHO_DATA_FOLDER absolute/path/to/dataset/folder  for one session. \n
+    Cmd command is: Set DATASETS_FOLDER absolute/path/to/dataset/folder  for one session. \n
     To set it permanently use SetX instead of Set (and probably reboot system)
     """ + _COMMON_END
 

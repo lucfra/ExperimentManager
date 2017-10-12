@@ -399,6 +399,16 @@ def _process_feed_dicts_for_rec(fd, *args, **kwargs):
     return _fds
 
 
+def every(stp, skip_first=True):
+    """
+    Returns a condition that is true every `stp` steps. To be used with rec....
+    :param stp:
+    :param skip_first:
+    :return:
+    """
+    return lambda _stp: _stp >= skip_first and _stp % stp == 0
+
+
 class COS:
     """
     Condition on score"""
