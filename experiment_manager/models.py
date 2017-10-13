@@ -40,8 +40,11 @@ class Network(object):
         # self.s = None
         self._tf_saver = None
 
-        with tf.variable_scope(self.name, reuse=reuse):
+        with self._variable_scope(reuse):
             self._build()
+
+    def _variable_scope(self, reuse):
+        return tf.variable_scope(self.name, reuse=reuse)
 
     def __getitem__(self, item):
         return self.layers[item]
