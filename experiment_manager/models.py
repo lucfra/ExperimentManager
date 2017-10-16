@@ -44,9 +44,23 @@ class Network(object):
             self._build()
 
     def _variable_scope(self, reuse):
+        """
+        May override default variable scope context, but pay attention since it looks like
+        initializer and default initializer form contrib.layers do not work well together (I think this is because
+        functions in contrib.layers usually specify an initializer....
+
+        :param reuse:
+        :return:
+        """
         return tf.variable_scope(self.name, reuse=reuse)
 
     def __getitem__(self, item):
+        """
+        Get's the `activation`
+
+        :param item:
+        :return:
+        """
         return self.layers[item]
 
     def __add__(self, other):
@@ -69,7 +83,7 @@ class Network(object):
 
     @property
     def out(self):
-        return self.layers[-1]
+        return self[-1]
 
     def for_input(self, new_input):
         pass
@@ -129,7 +143,7 @@ class Network(object):
     @property
     def tf_saver(self):
         if not self._tf_saver:
-            self._tf_saver = tf.train.Saver(var_list=self._variables_to_save())
+            self._tf_saver = tf.train.Saver(var_list=self._variables_to_save(), max_to_keep=1)
         return self._tf_saver
 
     def save(self, file_path, session=None, global_step=None):
