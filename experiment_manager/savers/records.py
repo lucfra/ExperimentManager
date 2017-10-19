@@ -1,15 +1,14 @@
 """
 Contains (for the moment) static convenience methods for recording quantities
 """
-import rfho as rf
 import tensorflow as tf
 import numpy as np
 from functools import wraps
 from experiment_manager.savers.save_and_load import Saver
-from experiment_manager.utils import as_list
+from experiment_manager.utils import as_list, flatten_list
 import sys
 
-from experiment_manager.datasets.structures import NAMED_SUPPLIER
+from experiment_manager.datasets.structures import NAMED_SUPPLIER, Dataset
 
 
 class on_hyperiteration:
@@ -52,6 +51,7 @@ class on_hyperiteration:
         if self.saver.timer: self.saver.timer.stop()
 
     def _wrap(self):
+        import rfho as rf
         self._unwrapped.append(rf.HyperOptimizer.initialize)
         rf.HyperOptimizer.initialize = self._initialize_wrapper(rf.HyperOptimizer.initialize)
 
@@ -59,6 +59,7 @@ class on_hyperiteration:
         rf.HyperOptimizer.run = self._saver_wrapper(rf.HyperOptimizer.run)  # mmm...
 
     def _unwrap(self):
+        import rfho as rf
         rf.HyperOptimizer.initialize = self._unwrapped[0]
         rf.HyperOptimizer.run = self._unwrapped[1]
 
@@ -72,6 +73,7 @@ class on_hyperiteration:
         return _saver_wrapped
 
     def _initialize_wrapper(self, f):  # this should be good since
+        import rfho as rf
         @wraps(f)
         def _initialize_wrapped(*args, **kwargs):
             first_init = f(*args, **kwargs)
@@ -111,7 +113,7 @@ class on_run(on_hyperiteration):
 
     def _execute_save(self, res, *args, **kwargs):
         if self._uninitialized:
-            self._processed_items += rf.flatten_list(
+            self._processed_items += flatten_list(
                 [Saver.process_items(*e(*args, **kwargs)) for e in self._record_what])
             self._uninitialized = False
         self._unwrap()  # otherwise we get infinite recursion!
@@ -126,6 +128,7 @@ class on_forward(on_hyperiteration):  # context class
     """
 
     def _wrap(self):
+        import rfho as rf
         self._unwrapped.append(rf.HyperOptimizer.initialize)
         rf.HyperOptimizer.initialize = self._initialize_wrapper(rf.HyperOptimizer.initialize)
 
@@ -135,6 +138,7 @@ class on_forward(on_hyperiteration):  # context class
         # self._unwrapped.append(rf.ReverseHG.)
 
     def _unwrap(self):
+        import rfho as rf
         rf.HyperOptimizer.initialize = self._unwrapped[0]
         rf.ForwardHG.step_forward = self._unwrapped[1]
 
@@ -161,6 +165,7 @@ def norms_of_z():
     """
 
     def _call(*args, **kwargs):
+        import rfho as rf
         hg = args[0]
         if isinstance(hg, rf.HyperOptimizer): hg = hg.hyper_gradients  # guess most common case
         assert isinstance(hg, rf.ForwardHG)
@@ -180,6 +185,7 @@ def norms_of_d_dynamics_d_hypers(fd=None):
     if fd is None: fd = lambda stp, rs: rs
 
     def _call(*args, **kwargs):
+        import rfho as rf
         hg = args[0]
         if isinstance(hg, rf.HyperOptimizer):
             hg = hg.hyper_gradients  # guess most common case
@@ -201,9 +207,10 @@ def hyperparameters():
 
     # noinspection PyUnusedLocal
     def _call(*args, **kwargs):
+        import rfho as rf
         hyper_optimizer = args[0]
         assert isinstance(hyper_optimizer, rf.HyperOptimizer)
-        return rf.flatten_list(
+        return flatten_list(
             [rf.simple_name(hyp), hyp]
             for hyp in hyper_optimizer.hyper_list)
 
@@ -219,6 +226,7 @@ def hypergradients():
 
     # noinspection PyUnusedLocal
     def _call(*args, **kwargs):
+        import rfho as rf
         hyper_optimizer = args[0]
         assert isinstance(hyper_optimizer, rf.HyperOptimizer)
         return rf.flatten_list(
@@ -248,6 +256,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
     if isinstance(fd, str) and not rec_name: rec_name = fd
 
     def _call(*args, **_kwargs):
+        import rfho as rf
         nonlocal rec_name, _tensors
         if _tensors:
             _tensors = [tf.get_default_graph().get_tensor_by_name(tns + ':0') if isinstance(tns, str)
@@ -255,7 +264,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
         elif key:
             _tensors = tf.get_collection(key, scope=scope)
         elif name_contains:
-            _names = rf.flatten_list([[n.name for n in tf.get_default_graph().as_graph_def().node
+            _names = flatten_list([[n.name for n in tf.get_default_graph().as_graph_def().node
                                        if nc in n.name] for nc in as_list(name_contains)])
             return _tensors(*_names, rec_name=rec_name, op=op, fd=fd, condition=True)(*args, **_kwargs)
         else:
@@ -263,7 +272,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
 
         if rec_name: rec_name += '::'  # maybe find a better way
 
-        _rs2 = rf.flatten_list([rec_name + rf.simple_name(tns.name),
+        _rs2 = flatten_list([rec_name + rf.simple_name(tns.name),
                                 op(tns),
                                 _process_feed_dicts_for_rec(fd, *args, **_kwargs),
                                 condition]
@@ -385,7 +394,7 @@ def _process_feed_dicts_for_rec(fd, *args, **kwargs):
             _rs = _std_process_dict(fd)
 
         elif isinstance(fd, (list, tuple)):  # (x, y, dataset)
-            if len(fd) == 3 and isinstance(fd[2], rf.Dataset):  # very common scenario
+            if len(fd) == 3 and isinstance(fd[2], Dataset):  # very common scenario
                 _rs = {tf.get_default_graph().get_tensor_by_name(fd[0] + ':0'): fd[2].data,
                        tf.get_default_graph().get_tensor_by_name(fd[1] + ':0'): fd[2].target,
                        }

@@ -41,6 +41,11 @@ def to_one_hot_enc(seq, dimension=None):
     return np.array([create_and_set(_v) for _v in seq])
 
 
+def flatten_list(lst):
+    from itertools import chain
+    return list(chain(*lst))
+
+
 def filter_vars(var_name, scope):
     import tensorflow as tf
     return [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
