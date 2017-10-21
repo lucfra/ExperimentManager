@@ -7,6 +7,7 @@ from functools import wraps
 from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list, flatten_list
 import sys
+import far_ho as far
 
 from experiment_manager.datasets.structures import NAMED_SUPPLIER, Dataset
 
@@ -119,6 +120,15 @@ class on_run(on_hyperiteration):
         self._unwrap()  # otherwise we get infinite recursion!
         super()._execute_save(res, *args, **kwargs)
         self._wrap()
+
+class on_far(on_run):
+
+    def _wrap(self):
+        self._unwrapped.append(far.HyperOptimizer.run)
+        far.HyperOptimizer.run = self._saver_wrapper(far.HyperOptimizer.run)
+
+    def _unwrap(self):
+        far.HyperOptimizer.run = self._unwrapped[0]
 
 
 # noinspection PyClassHasNoInit,PyPep8Naming

@@ -562,7 +562,8 @@ class Saver:
         from experiment_manager.savers import records
         associations = {'hyper': records.on_hyperiteration,
                         'run': records.on_run,
-                        'forward': records.on_forward}
+                        'forward': records.on_forward,
+                        'far': records.on_far}
         assert where in associations, 'param where must be one of %s' % list(associations.keys())
         return associations[where](self, *what, append_string=append_string, every=every)
 
