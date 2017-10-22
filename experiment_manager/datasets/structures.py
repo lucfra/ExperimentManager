@@ -206,16 +206,44 @@ class MetaDataset(Dataset):
         self.kwargs = kwargs
 
     def generate_datasets(self, *args, **kwargs):
+        """
+        Generates and returns a single Datasets (possibly composed by training, validation and test sets)
+        according to args and kwargs
+
+        :param args:
+        :param kwargs:
+        :return: `Datasets`
+        """
         raise NotImplementedError()
 
-    def generate(self, count, *args, **kwargs):
+    def generate(self, count, batch_size=1, *args, **kwargs):
+        """
+        Generator of datasets
+
+        :param count:
+        :param batch_size:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         if not args: args = self.args
         if not kwargs: kwargs = self.kwargs
         for _ in range(count):
-            yield self.generate_datasets(*args, **kwargs)
+            if batch_size == 1:
+                yield self.generate_datasets(*args, **kwargs)
+            else:
+                yield self.generate_batch(batch_size, *args, **kwargs)
 
-    def generate_batch(self, num, *args, **kwargs):
-        return [d for d in self.generate(num, *args, **kwargs)]
+    def generate_batch(self, batch_size, *args, **kwargs):
+        """
+        Generates a batch of Datasets
+
+        :param batch_size:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return [self.generate_datasets(*args, **kwargs) for _ in range(batch_size)]
 
     @property
     def dim_data(self, *args, **kwargs):
