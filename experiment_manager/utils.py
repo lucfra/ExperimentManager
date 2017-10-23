@@ -51,3 +51,10 @@ def filter_vars(var_name, scope):
     return [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
                                          scope=scope.name if hasattr(scope, 'name') else scope)
             if v.name.endswith('%s:0' % var_name)]
+
+
+def GPU_CONFIG():
+    import tensorflow as tf
+    CONFIG_GPU_GROWTH = tf.ConfigProto(allow_soft_placement=True)
+    CONFIG_GPU_GROWTH.gpu_options.allow_growth = True
+    return CONFIG_GPU_GROWTH
