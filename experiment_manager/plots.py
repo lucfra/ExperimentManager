@@ -19,11 +19,12 @@ def autoplot(saver_or_history, saver=None, append_string=''):
     else: history = saver_or_history
 
     def _simple_plot(_k, _v):
+        split_k = _k.split('::')
         _title = None
         if isinstance(v, list) and isinstance(v[0], (float, int, np.number)):
-            _title = _k.split('::')[0].capitalize()
+            _title = split_k[0].capitalize()
             plt.title(_title)
-            plt.plot(_v, legend=k.split('::')[1].capitalize())
+            plt.plot(_v, legend=split_k[1].capitalize() if len(split_k) > 1 else '')
         return _title
 
     remain_to_process = list(history.keys())
