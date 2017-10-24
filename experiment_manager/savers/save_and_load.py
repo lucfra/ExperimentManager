@@ -515,7 +515,7 @@ class Saver:
 
         return save_dict
 
-    def pack_save_dictionaries(self, name='all', append_string='', erase_others=True):
+    def pack_save_dictionaries(self, name='all', append_string='', erase_others=True, save_packed=True):
         """
         Creates an unique file starting from file created by method `save`.
         The file contains a dictionary with keys equal to save_dict keys and values list of values form original files.
@@ -541,7 +541,8 @@ class Saver:
         packed_dict = defaultdict(list, OrderedDict())
         for obj in objs:
             [packed_dict[k].append(v) for k, v in obj.items()]
-        self.save_obj(packed_dict, name=name + append_string)
+        if save_packed:
+            self.save_obj(packed_dict, name=name + append_string)
 
         if erase_others:
             [os.remove(f) for f in all_files]
