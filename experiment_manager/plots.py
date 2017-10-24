@@ -28,7 +28,7 @@ def autoplot(saver_or_history, saver=None, append_string=''):
         return _title
 
     remain_to_process = list(history.keys())
-    for k, v in history:
+    for k, v in history.items():
         remain_to_process.remove(k)
         if k in remain_to_process:  # this could be done with a generator.....
                 title = _simple_plot(k, v)
