@@ -6,9 +6,12 @@ from experiment_manager.savers.save_and_load import Saver
 
 seaborn.set_style('whitegrid')
 
+from IPython.display import clear_output
+
 
 def autoplot(saver_or_history, saver=None, append_string=''):
-
+    try: clear_output()
+    except: pass
     if isinstance(saver_or_history, Saver):
         saver = saver_or_history
         try:
@@ -29,12 +32,12 @@ def autoplot(saver_or_history, saver=None, append_string=''):
 
     remain_to_process = list(history.keys())
     for k, v in history.items():
-        remain_to_process.remove(k)
         if k in remain_to_process:  # this could be done with a generator.....
-                title = _simple_plot(k, v)
-                for kk in remain_to_process:
-                    if kk.startswith(k.split('::')[0]):
-                        remain_to_process.remove(kk)
-                        title = _simple_plot(kk, history[kk])
-                if saver: saver.save_fig(title)
-                plt.show()
+            remain_to_process.remove(k)
+            title = _simple_plot(k, v)
+            for kk in remain_to_process:
+                if kk.startswith(k.split('::')[0]):
+                    remain_to_process.remove(kk)
+                    title = _simple_plot(kk, history[kk])
+            if saver and saver.collect_data: saver.save_fig(title)
+            plt.show()
