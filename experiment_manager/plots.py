@@ -1,12 +1,16 @@
-import numpy as np
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import seaborn
+import sys
+
+from experiment_manager.utils import merge_dicts
 
 from experiment_manager.savers.save_and_load import Saver
+from IPython.display import clear_output
 
 seaborn.set_style('whitegrid')
 
-from IPython.display import clear_output
 
 
 def autoplot(saver_or_history, saver=None, append_string=''):
@@ -21,23 +25,23 @@ def autoplot(saver_or_history, saver=None, append_string=''):
                                                    append_string=append_string)
     else: history = saver_or_history
 
-    def _simple_plot(_k, _v):
-        split_k = _k.split('::')
-        _title = None
-        if isinstance(v, list) and isinstance(v[0], (float, int, np.number)):
-            _title = split_k[0].capitalize()
-            plt.title(_title)
-            plt.plot(_v, legend=split_k[1].capitalize() if len(split_k) > 1 else '')
-        return _title
+    def _simple_plot(_title, _label, _v):
+        try:
+            if isinstance(v, list):
+                plt.title(_title.capitalize())
+                plt.plot(_v, label=_label.capitalize())
+        except:
+            print('Could not plot %s' % _title, file=sys.stderr)
 
-    remain_to_process = list(history.keys())
+    nest = defaultdict(lambda: {})
     for k, v in history.items():
-        if k in remain_to_process:  # this could be done with a generator.....
-            remain_to_process.remove(k)
-            title = _simple_plot(k, v)
-            for kk in remain_to_process:
-                if kk.startswith(k.split('::')[0]):
-                    remain_to_process.remove(kk)
-                    title = _simple_plot(kk, history[kk])
-            if saver and saver.collect_data: saver.save_fig(title)
-            plt.show()
+        k_split = k.split('::')
+        k_1 = k_split[1] if len(k_split) > 1 else ''
+        nest[k_split[0]] = merge_dicts(nest[k_split[0]], {k_1: v})
+
+    for k, _dict_k in nest.items():
+        for kk, v in _dict_k.items():
+            _simple_plot(k, kk, v)
+        if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
+        if saver and saver.collect_data: saver.save_fig(k)
+        plt.show()
