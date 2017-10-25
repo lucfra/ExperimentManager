@@ -22,6 +22,8 @@ def autoplot(saver_or_history, saver=None, append_string=''):
         except FileNotFoundError:
             history = saver.pack_save_dictionaries(erase_others=False, save_packed=False,
                                                    append_string=append_string)
+        if history is None:
+            return 'nothing yet...'
     else: history = saver_or_history
 
     def _simple_plot(_title, _label, _v):
@@ -46,3 +48,4 @@ def autoplot(saver_or_history, saver=None, append_string=''):
             if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
             if saver and saver.collect_data: saver.save_fig(k)
             plt.show()
+    return 'done...'
