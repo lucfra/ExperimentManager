@@ -12,7 +12,6 @@ from IPython.display import clear_output
 seaborn.set_style('whitegrid')
 
 
-
 def autoplot(saver_or_history, saver=None, append_string=''):
     try: clear_output()
     except: pass
@@ -40,9 +39,10 @@ def autoplot(saver_or_history, saver=None, append_string=''):
         nest[k_split[0]] = merge_dicts(nest[k_split[0]], {k_1: v})
 
     for k, _dict_k in nest.items():
-        plt.figure(figsize=(8,6))
-        for kk, v in _dict_k.items():
-            _simple_plot(k, kk, v)
-        if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
-        if saver and saver.collect_data: saver.save_fig(k)
-        plt.show()
+        if k != 'SKIP':
+            plt.figure(figsize=(8, 6))
+            for kk, v in _dict_k.items():
+                _simple_plot(k, kk, v)
+            if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
+            if saver and saver.collect_data: saver.save_fig(k)
+            plt.show()
