@@ -493,7 +493,7 @@ class Saver:
         for pt in processed_items:
             save_dict[pt[0]] = _compute_value(pt, save_dict)
 
-        if self.timer: save_dict['Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
+        if self.timer: save_dict['SKIP::Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
 
         if do_print:
             if tabulate:

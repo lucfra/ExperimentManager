@@ -59,7 +59,8 @@ def name_from_vars(var_dict, *vars_):
         for k, vv in var_dict.items():
             if v == vv:
                 new_k_v[k] = str(v)
-    return '_'.join(flatten_list(list(sorted(new_k_v.items())))).replace('[', '__').replace(']', '__').replace(',', '_')
+    return '_'.join(flatten_list(list(sorted(new_k_v.items()))))\
+        .replace('[', '_p_').replace(']', '_p_').replace(',', '_c_')
 
 
 def GPU_CONFIG():

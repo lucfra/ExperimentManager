@@ -359,7 +359,7 @@ def model(_model, condition=True):
         if _saver.collect_data:
             _saver.save_model(_model, step=step)
             return 'SAVED'
-    return direct('model::%.20s' % _model.name, _save_model, condition)
+    return direct('SKIP::model::%.20s' % _model.name, _save_model, condition)
 
 
 def setting():  # TODO I have no precise idea on how to implement this...
