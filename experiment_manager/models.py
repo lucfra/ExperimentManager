@@ -86,7 +86,7 @@ class Network(object):
         return self[-1]
 
     def for_input(self, new_input):
-        pass
+        raise NotImplemented()
 
     def filter_vars(self, var_name):
         return filter_vars(var_name, self.name)
@@ -138,7 +138,7 @@ class Network(object):
         return self.var_list
 
     def _build(self):
-        pass
+        raise NotImplemented()
 
     @property
     def tf_saver(self):
