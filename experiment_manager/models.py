@@ -181,7 +181,8 @@ class FeedForwardNet(Network):
 
     def for_input(self, new_input):
         return FeedForwardNet(new_input, self.dims, self.name, self.activation,
-                              self.var_collections, self.deterministic_initialization, reuse=True)
+                              self.var_collections, self.output_weight_initializer,
+                              self.deterministic_initialization, reuse=True)
 
 
 if __name__ == '__main__':
