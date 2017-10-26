@@ -7,14 +7,18 @@ import sys
 from experiment_manager.utils import merge_dicts
 
 from experiment_manager.savers.save_and_load import Saver
-from IPython.display import clear_output
+from IPython.display import clear_output as c_out
 
 seaborn.set_style('whitegrid')
 
 
-def autoplot(saver_or_history, saver=None, append_string=''):
-    try: clear_output()
-    except: pass
+# noinspection PyBroadException
+def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
+    if clear_output:
+        try: c_out()
+        except: pass
+    if isinstance(saver_or_history, (list, tuple)):
+        return [autoplot(soh, saver, append_string, clear_output=False) for soh in saver_or_history]
     if isinstance(saver_or_history, Saver):
         saver = saver_or_history
         try:
@@ -26,12 +30,14 @@ def autoplot(saver_or_history, saver=None, append_string=''):
             return 'nothing yet...'
     else: history = saver_or_history
 
+    # noinspection PyBroadException
     def _simple_plot(_title, _label, _v):
         try:
             if isinstance(v, list):
                 plt.title(_title.capitalize())
                 plt.plot(_v, label=_label.capitalize())
         except:
+            # TODO print the cause of exception. or at least the name
             print('Could not plot %s' % _title, file=sys.stderr)
 
     nest = defaultdict(lambda: {})
@@ -48,4 +54,5 @@ def autoplot(saver_or_history, saver=None, append_string=''):
             if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
             if saver and saver.collect_data: saver.save_fig(k)
             plt.show()
+    print('='*50)
     return 'done...'

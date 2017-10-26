@@ -1,3 +1,5 @@
+import glob
+
 from experiment_manager.utils import as_list
 import time
 from collections import OrderedDict, defaultdict
@@ -548,6 +550,10 @@ class Saver:
             [os.remove(f) for f in all_files]
 
         return packed_dict
+
+    def load_all_packed(self):
+        alls = [e.split('/')[-1] for e in glob.glob(self.directory + '/Obj_data/all*')]
+        return [self.load_obj(_a) for _a in alls]
 
     def record(self, *what, where='hyper', append_string='', every=1):  # TODO this is initial (maybe bad)
         # idea [getting better].
