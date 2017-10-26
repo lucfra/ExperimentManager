@@ -160,10 +160,12 @@ class Network(object):
 class FeedForwardNet(Network):
     def __init__(self, _input, dims, name='FeedForwardNet', activation=tf.nn.relu,
                  var_collections=(tf.GraphKeys.GLOBAL_VARIABLES, tf.GraphKeys.TRAINABLE_VARIABLES),
+                 output_weight_initializer=tf.zeros_initializer,
                  deterministic_initialization=False, reuse=False):
         self.dims = dims
         self.activation = activation
         self.var_collections = var_collections
+        self.output_weight_initializer = output_weight_initializer
         super().__init__(_input, name, deterministic_initialization, reuse)
 
     def _build(self):
@@ -174,7 +176,7 @@ class FeedForwardNet(Network):
 
     def _build_output_layer(self):
         self + tcl.fully_connected(self.out, self.dims[-1], activation_fn=None,
-                                   weights_initializer=tf.zeros_initializer,
+                                   weights_initializer=self.output_weight_initializer,
                                    variables_collections=self.var_collections, trainable=False)
 
     def for_input(self, new_input):
