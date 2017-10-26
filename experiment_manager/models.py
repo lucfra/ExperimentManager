@@ -2,6 +2,7 @@ import tensorflow as tf
 import sys
 
 from experiment_manager import filter_vars
+from tensorflow.contrib import layers as tcl
 
 
 class Network(object):
@@ -101,6 +102,7 @@ class Network(object):
         :param session:
         :return:
         """
+        # TODO placeholder are not useful at all here... just change initializer of tf.Variables !
         ss = session or tf.get_default_session()
         assert ss, 'No default session'
         if not self._var_initializer_op:
@@ -147,11 +149,37 @@ class Network(object):
         return self._tf_saver
 
     def save(self, file_path, session=None, global_step=None):
+        # TODO change this method! save the class (or at least the attributes you can save
         self.tf_saver.save(session or tf.get_default_session(), file_path, global_step=global_step)
 
     def restore(self, file_path, session=None, global_step=None):
         if global_step: file_path += '-' + str(global_step)
         self.tf_saver.restore(session or tf.get_default_session(), file_path)
+
+
+class FeedForwardNet(Network):
+    def __init__(self, _input, dims, name='FeedForwardNet', activation=tf.nn.relu,
+                 var_collections=(tf.GraphKeys.GLOBAL_VARIABLES, tf.GraphKeys.TRAINABLE_VARIABLES),
+                 deterministic_initialization=False, reuse=False):
+        self.dims = dims
+        self.activation = activation
+        self.var_collections = var_collections
+        super().__init__(_input, name, deterministic_initialization, reuse)
+
+    def _build(self):
+        for d in self.dims[:-1]:
+            self + tcl.fully_connected(self.out, d, activation_fn=self.activation,
+                                       variables_collections=self.var_collections, trainable=False)
+        self._build_output_layer()
+
+    def _build_output_layer(self):
+        self + tcl.fully_connected(self.out, self.dims[-1], activation_fn=None,
+                                   weights_initializer=tf.zeros_initializer,
+                                   variables_collections=self.var_collections, trainable=False)
+
+    def for_input(self, new_input):
+        return FeedForwardNet(new_input, self.dims, self.name, self.activation,
+                              self.var_collections, self.deterministic_initialization, reuse=True)
 
 
 if __name__ == '__main__':
