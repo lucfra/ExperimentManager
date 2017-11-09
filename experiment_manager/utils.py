@@ -54,13 +54,34 @@ def filter_vars(var_name, scope):
 
 
 def name_from_vars(var_dict, *vars_):
+    """
+    Unfortunately this method doesn't return a very specific name....It gets a little messy
+
+    :param var_dict:
+    :param vars_:
+    :return:
+    """
     new_k_v = {}
     for v in vars_:
         for k, vv in var_dict.items():
             if v == vv:
-                new_k_v[k] = str(v)
-    return '_'.join(flatten_list(list(sorted(new_k_v.items()))))\
-        .replace('[', '_p_').replace(']', '_p_').replace(',', '_c_')
+                new_k_v[k] = v
+    return name_from_dict(new_k_v)
+
+
+def name_from_dict(_dict):
+    string_dict = {str(k): str(v) for k, v in _dict.items()}
+    return _tf_string_replace('_'.join(flatten_list(list(sorted(string_dict.items())))))
+
+
+def _tf_string_replace(_str):
+    """
+    Replace chars that are not accepted by tensorflow namings (eg. variable_scope)
+
+    :param _str:
+    :return:
+    """
+    return _str.replace('[', '_p_').replace(']', '_p_').replace(',', '_c_')
 
 
 def GPU_CONFIG():

@@ -555,7 +555,7 @@ class Saver:
         alls = [e.split('/')[-1] for e in glob.glob(self.directory + '/Obj_data/all*')]
         return [self.load_obj(_a) for _a in alls]
 
-    def record(self, *what, where='hyper', append_string='', every=1):  # TODO this is initial (maybe bad)
+    def record(self, *what, where='hyper', append_string='', every=1):
         # idea [getting better].
         """
         Context manager for saver. saves statistics at the end of every `where` (default hyperiteration)

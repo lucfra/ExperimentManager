@@ -72,7 +72,7 @@ class Network(object):
 
     @property
     def var_list(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.name)
+        return tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, self.name)
 
     @property
     def Ws(self):
