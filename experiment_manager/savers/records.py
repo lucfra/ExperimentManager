@@ -4,6 +4,8 @@ Contains (for the moment) static convenience methods for recording quantities
 import tensorflow as tf
 import numpy as np
 from functools import wraps
+
+from experiment_manager import plots
 from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list, flatten_list
 import sys
@@ -151,6 +153,10 @@ class on_forward(on_hyperiteration):  # context class
         import rfho as rf
         rf.HyperOptimizer.initialize = self._unwrapped[0]
         rf.ForwardHG.step_forward = self._unwrapped[1]
+
+
+def autoplot(saver, name=''):
+    return direct('SKIP::autoplot', lambda: plots.autoplot(saver, name))
 
 
 def direct(*items):

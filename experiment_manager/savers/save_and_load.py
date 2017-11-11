@@ -658,6 +658,13 @@ class Saver:
     def restore_model(self, model, step=None, session=None):
         restore_model(model, step=step, session=session, root_dir=self.directory, notebook_mode=False)
 
+    def save_tf(self, var_list=None, name='save_tf', step=None, session=None, **saver_kwargs):
+        import tensorflow as tf
+        tf.train.Saver(var_list=var_list, **saver_kwargs).save(
+            session or tf.get_default_session(), join_paths(self.directory, name),
+            global_step=step
+        )
+
     def open(self, filename, mode):
         return open(join_paths(self.directory, filename), mode)
 
