@@ -355,7 +355,7 @@ def number_of_nodes(condition=True):
     return _call
 
 
-def model(_model, condition=True):
+def model(_model, condition=True, save_step=False):
     """
     Should save the model(s) in a useful way..
 
@@ -363,7 +363,7 @@ def model(_model, condition=True):
     """
     def _save_model(step, _, _saver):
         if _saver.collect_data:
-            _saver.save_model(_model, step=step)
+            _saver.save_model(_model, step=step if save_step else None)
             return 'SAVED'
     return direct('SKIP::model::%.20s' % _model.name, _save_model, condition)
 
