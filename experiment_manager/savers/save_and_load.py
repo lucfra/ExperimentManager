@@ -661,14 +661,16 @@ class Saver:
     def save_tf(self, var_list=None, name='save_tf', step=None, session=None, **saver_kwargs):
         import tensorflow as tf
         tf.train.Saver(var_list=var_list, **saver_kwargs).save(
-            session or tf.get_default_session(), join_paths(self.directory, name),
+            session or tf.get_default_session(), join_paths(
+                join_paths(self.directory,FOLDER_NAMINGS['MODELS_DIR']), name),
             global_step=step
         )
 
     def restore_tf(self, var_list=None, name='save_tf', session=None, **saver_kwargs):
         import tensorflow as tf
         tf.train.Saver(var_list=var_list, **saver_kwargs).restore(
-            session or tf.get_default_session(), join_paths(self.directory, name)
+            session or tf.get_default_session(), join_paths(
+                join_paths(self.directory, FOLDER_NAMINGS['MODELS_DIR']), name)
         )
 
     def open(self, filename, mode):
