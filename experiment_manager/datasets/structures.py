@@ -83,7 +83,7 @@ class Dataset:
         :param info: (optional) dictionary with further info about the dataset
         """
         self._tensor_mode = False
-        self.name = name
+        self._name = name
 
         self._data = data
         self._target = target
@@ -97,6 +97,11 @@ class Dataset:
             assert self.num_examples == self._shape(self._target)[0]
 
         self.info = info or {}
+        self.info['_name'] = self._name
+
+    @property
+    def name(self):
+        return self.info['_name']
 
     def _shape(self, what):
         return what.get_shape().as_list() if self._tensor_mode else what.shape
@@ -206,8 +211,7 @@ class Dataset:
 
 class MetaDataset(Dataset):
     def __init__(self, info=None, name='MetaDataset', *args, **kwargs):
-        super().__init__(None, None, None, info)
-        self.name = name
+        super().__init__(None, None, None, info, name=name)
         self.args = args
         self.kwargs = kwargs
 

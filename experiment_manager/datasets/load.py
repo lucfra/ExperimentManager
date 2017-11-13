@@ -1,5 +1,8 @@
 from collections import defaultdict
 from os.path import join
+
+from tensorflow.contrib.learn.python.learn.datasets.mnist import read_data_sets
+
 import experiment_manager as em
 import os
 import numpy as np
@@ -65,6 +68,19 @@ def balanced_choice_wr(a, num):
     return np.concatenate(
         [np.random.choice(a, size=(d,), replace=False) for d in lst]
     )
+
+
+def load_mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, shuffle=False):
+    if not folder: folder = MNIST_DIR
+    datasets = read_data_sets(folder, one_hot=one_hot)
+    train = em.Dataset(datasets.train.images, datasets.train.labels)
+    validation = em.Dataset(datasets.validation.images, datasets.validation.labels)
+    test = em.Dataset(datasets.test.images, datasets.test.labels)
+    res = [train, validation, test]
+    if partitions:
+        res = redivide_data(res, partition_proportions=partitions, filters=filters, maps=maps, shuffle=shuffle)
+        res += [None] * (3 - len(res))
+    return em.Datasets.from_list(res)
 
 
 def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num_classes=None,
