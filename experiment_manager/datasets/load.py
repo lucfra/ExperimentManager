@@ -205,6 +205,9 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
                 'file': file,
                 'one_hot_enc': one_hot_enc
             }, num_classes=std_num_classes, num_examples=std_num_examples))
+        # change name with shots...
+        if std_num_classes and std_num_examples:
+            meta_dts[-1].name += '_shots_%s' % (std_num_examples[0]//std_num_classes)
     dts = em.Datasets.from_list(meta_dts)
     if load_all_images:
         import time
