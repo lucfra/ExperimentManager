@@ -9,7 +9,6 @@ from contextlib import redirect_stdout, contextmanager
 
 import matplotlib.pyplot as plt
 
-
 try:
     from IPython.display import IFrame
     import IPython
@@ -274,10 +273,19 @@ class Saver:
     SKIP = 'SKIP'  # skip saving value in save_dict
 
     @classmethod
-    def std_saver(cls, *names):
-        return lambda named_obj: Saver([n for n in names] + [named_obj.name], append_date_to_name=False,
-                                       ask_for_description=False,
-                                       default_overwrite=True)
+    def std_saver(cls, *names, description=False):
+        """
+        Returns a function that builds a standard Saver, which has filepath given by names and to which is optionally
+        possible to append the name of a named object (that is an object that has a filed name) to it.
+
+        :param names: varargs for subfolders.
+        :param description: (optional, defualt False) True for input description, str for providing a fixed description
+        :return: a function with signature named_object -> Saver
+        """
+        return lambda named_obj=None: Saver([n for n in names] + [named_obj.name] if named_obj is not None else [],
+                                            append_date_to_name=description,
+                                            ask_for_description=False,
+                                            default_overwrite=True)
 
     def __init__(self, experiment_names, *items, append_date_to_name=True,
                  root_directory=FOLDER_NAMINGS['EXP_ROOT'],
@@ -307,7 +315,7 @@ class Saver:
                             method `save` is executed
         """
         self.last_record = None
-        if ask_for_description:
+        if ask_for_description is True:
             description = input('Experiment description:')
             if description == 'SKIP':
                 collect_data = False
@@ -668,7 +676,7 @@ class Saver:
         import tensorflow as tf
         tf.train.Saver(var_list=var_list, **saver_kwargs).save(
             session or tf.get_default_session(), join_paths(
-                join_paths(self.directory,FOLDER_NAMINGS['MODELS_DIR']), name),
+                join_paths(self.directory, FOLDER_NAMINGS['MODELS_DIR']), name),
             global_step=step
         )
 
