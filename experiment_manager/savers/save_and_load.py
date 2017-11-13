@@ -273,6 +273,12 @@ class Saver:
 
     SKIP = 'SKIP'  # skip saving value in save_dict
 
+    @classmethod
+    def std_saver(cls, *names):
+        return lambda named_obj: Saver([n for n in names] + [named_obj.name], append_date_to_name=False,
+                                       ask_for_description=False,
+                                       default_overwrite=True)
+
     def __init__(self, experiment_names, *items, append_date_to_name=True,
                  root_directory=FOLDER_NAMINGS['EXP_ROOT'],
                  timer=None, do_print=True, collect_data=True, default_overwrite=False,
