@@ -156,7 +156,7 @@ class on_forward(on_hyperiteration):  # context class
 
 
 def autoplot(saver, name=''):
-    return direct('SKIP::autoplot', lambda: plots.autoplot(saver, name))
+    return direct('SKIP::autoplot', lambda: plots.autoplot(saver, append_string=name))
 
 
 def direct(*items):

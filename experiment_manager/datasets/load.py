@@ -70,12 +70,12 @@ def balanced_choice_wr(a, num):
     )
 
 
-def load_mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, shuffle=False):
+def mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, shuffle=False):
     if not folder: folder = MNIST_DIR
     datasets = read_data_sets(folder, one_hot=one_hot)
-    train = em.Dataset(datasets.train.images, datasets.train.labels)
-    validation = em.Dataset(datasets.validation.images, datasets.validation.labels)
-    test = em.Dataset(datasets.test.images, datasets.test.labels)
+    train = em.Dataset(datasets.train.images, datasets.train.labels, name='MNIST')
+    validation = em.Dataset(datasets.validation.images, datasets.validation.labels, name='MNIST')
+    test = em.Dataset(datasets.test.images, datasets.test.labels, name='MNIST')
     res = [train, validation, test]
     if partitions:
         res = redivide_data(res, partition_proportions=partitions, filters=filters, maps=maps, shuffle=shuffle)

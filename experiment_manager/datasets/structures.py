@@ -73,7 +73,7 @@ class Dataset:
      per-example basis and general infos.
     """
 
-    def __init__(self, data, target, sample_info=None, info=None, name='Dataset'):
+    def __init__(self, data, target, sample_info=None, info=None, name=None):
         """
 
         :param data: Numpy array containing data
@@ -83,7 +83,7 @@ class Dataset:
         :param info: (optional) dictionary with further info about the dataset
         """
         self._tensor_mode = False
-        self._name = name
+        # self._name = name
 
         self._data = data
         self._target = target
@@ -97,7 +97,7 @@ class Dataset:
             assert self.num_examples == self._shape(self._target)[0]
 
         self.info = info or {}
-        self.info['_name'] = self._name
+        self.info.setdefault('_name', name)
 
     @property
     def name(self):
