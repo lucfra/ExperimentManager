@@ -273,7 +273,7 @@ class Saver:
     SKIP = 'SKIP'  # skip saving value in save_dict
 
     @classmethod
-    def std_saver(cls, *names, description=False):
+    def std(cls, *names, description=False):
         """
         Returns a function that builds a standard Saver, which has filepath given by names and to which is optionally
         possible to append the name of a named object (that is an object that has a filed name) to it.
