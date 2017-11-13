@@ -86,8 +86,8 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
     """
     class ImageNetMetaDataset(em.MetaDataset):
 
-        def __init__(self, info=None, num_classes=None, num_examples=None):
-            super().__init__(info, num_classes=num_classes, num_examples=num_examples)
+        def __init__(self, info=None, name='MiniImagenet', num_classes=None, num_examples=None):
+            super().__init__(info, name=name, num_classes=num_classes, num_examples=num_examples)
             self._loaded_images = defaultdict(lambda: {})
             self._threads = []
 

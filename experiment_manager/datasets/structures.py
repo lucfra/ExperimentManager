@@ -28,6 +28,10 @@ class Datasets:
     def __len__(self):
         return len([_ for _ in self._lst if _ is not None])
 
+    @property
+    def name(self):
+        return self.train.name   # could be that different datasets have different names....
+
     @staticmethod
     def from_list(list_of_datasets):
         """
@@ -69,7 +73,7 @@ class Dataset:
      per-example basis and general infos.
     """
 
-    def __init__(self, data, target, sample_info=None, info=None):
+    def __init__(self, data, target, sample_info=None, info=None, name='Dataset'):
         """
 
         :param data: Numpy array containing data
@@ -79,6 +83,7 @@ class Dataset:
         :param info: (optional) dictionary with further info about the dataset
         """
         self._tensor_mode = False
+        self.name = name
 
         self._data = data
         self._target = target
@@ -200,8 +205,9 @@ class Dataset:
 
 
 class MetaDataset(Dataset):
-    def __init__(self, info=None, *args, **kwargs):
+    def __init__(self, info=None, name='MetaDataset', *args, **kwargs):
         super().__init__(None, None, None, info)
+        self.name = name
         self.args = args
         self.kwargs = kwargs
 
