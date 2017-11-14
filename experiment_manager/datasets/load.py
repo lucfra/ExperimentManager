@@ -194,7 +194,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
                 targets += [k]*600
             if self.info['one_hot_enc']:
                 targets = em.to_one_hot_enc(targets, dimension=len(self._loaded_images))
-            _dts = [em.Dataset(data=np.stack(data), target=np.array(targets))]
+            _dts = [em.Dataset(data=np.stack(data), target=np.array(targets), name='MiniImagenet_full')]
             if seed:
                 np.random.seed(seed)
             if partition_proportions:
