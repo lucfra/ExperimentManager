@@ -280,9 +280,10 @@ class Saver:
 
         :param names: varargs for subfolders.
         :param description: (optional, defualt False) True for input description, str for providing a fixed description
-        :return: a function with signature named_object -> Saver
+        :return: a function with signature (string | named_object) -> Saver
         """
-        return lambda named_obj=None: Saver([n for n in names] + [named_obj.name] if named_obj is not None else [],
+        nm = lambda _n: _n if isinstance(_n, str) else _n.name
+        return lambda named_obj=None: Saver([n for n in names] + [nm(named_obj)] if named_obj is not None else [],
                                             append_date_to_name=description,
                                             ask_for_description=False,
                                             default_overwrite=True)
