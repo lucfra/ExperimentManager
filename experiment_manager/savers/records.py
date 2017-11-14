@@ -514,11 +514,15 @@ class COS:
             else: return False
         else: return None
 
-    def rec_score(self):
+    def rec_score(self, add_name=False):
+        key = 'SKIP::best score'
+        if add_name: key += '::' + self.score_name
         return direct('SKIP::best::' + self.score_name, lambda: self.best)
 
-    def rec_best_record(self):
-        return direct('HIDE::best record', lambda: self.best_record)
+    def rec_best_record(self, add_name=False):
+        key = 'HIDE::best record'
+        if add_name: key += '::' + self.score_name
+        return direct(key, lambda: self.best_record)
 
 
 if __name__ == '__main__':
