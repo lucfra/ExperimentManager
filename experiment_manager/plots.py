@@ -47,7 +47,7 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
         nest[k_split[0]] = merge_dicts(nest[k_split[0]], {k_1: v})
 
     for k, _dict_k in nest.items():
-        if k != 'SKIP':
+        if k != 'SKIP' and k != 'HIDE':
             plt.figure(figsize=(8, 6))
             for kk, v in _dict_k.items():
                 _simple_plot(k, kk, v)
