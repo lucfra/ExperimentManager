@@ -284,8 +284,8 @@ class Saver:
         """
         nm = lambda _n: _n if isinstance(_n, str) else _n.name
         return lambda named_obj=None: Saver([n for n in names] + [nm(named_obj)] if named_obj is not None else [],
-                                            append_date_to_name=description,
-                                            ask_for_description=False,
+                                            append_date_to_name=False,
+                                            ask_for_description=description,
                                             default_overwrite=True)
 
     def __init__(self, experiment_names, *items, append_date_to_name=True,
