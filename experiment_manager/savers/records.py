@@ -156,7 +156,7 @@ class on_forward(on_hyperiteration):  # context class
 
 
 def autoplot(saver, name=''):
-    return direct('SKIP::autoplot', lambda: plots.autoplot(saver, append_string=name))
+    return direct('HIDE::autoplot', lambda: plots.autoplot(saver, append_string=name))
 
 
 def direct(*items):
@@ -441,6 +441,7 @@ class COS:
     def __init__(self, score, comparator=None, init_best=-np.inf):
         self.score_name = score  # TODO score could be a function or a tensor
         self.best = init_best
+        self.best_record = None
         self._init_best = init_best
         self._comparator = comparator
 
@@ -456,6 +457,7 @@ class COS:
             # if not _partial_record: return False  # nothing yet
             res = _cos._check_for_improvements(_partial_record)
             self.best = _cos.best
+            self.best_record = cos.best_record
             return res
 
         return _call
@@ -489,6 +491,7 @@ class COS:
                     remaining_patience = patience
                 print('remaining_patience', remaining_patience)
                 self.best = _cos.best  # update this object best score
+                self.best_record = _cos.best_record
             t += step
 
     def _check_for_improvements(self, _records):
@@ -506,9 +509,16 @@ class COS:
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
             if self.comparator(self.best, score):
                 self.best = score
+                self.best_record = _records
                 return True
             else: return False
         else: return None
+
+    def rec_score(self):
+        return direct('SKIP::best::' + self.score_name, lambda: self.best)
+
+    def rec_best_record(self):
+        return direct('HIDE::best record', lambda: self.best_record)
 
 
 if __name__ == '__main__':

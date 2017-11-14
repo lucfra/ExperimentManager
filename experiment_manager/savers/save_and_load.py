@@ -513,8 +513,8 @@ class Saver:
 
         if do_print:
             if tabulate:
-                print(tabulate(save_dict.items(), headers=('Step %s' % step,
-                                                           '/'.join(self.experiment_names)),
+                print(tabulate([(k, v) for k, v in save_dict.items() if not k.startswith('HIDE')],
+                               headers=('Step %s' % step, '/'.join(self.experiment_names)),
                                floatfmt='.5f'))
                 print()
             else:
