@@ -475,7 +475,7 @@ class Saver:
 
         if self.timer: self.timer.stop()
 
-        def _maybe_call(_method, _partial_save_dict):
+        def _maybe_call(_method, _partial_save_dict):  # this is a bit crazy...
             if not callable(_method): return _method
             if len(signature(_method).parameters) == 0:
                 _out = _method()
@@ -506,9 +506,20 @@ class Saver:
             else:
                 return Saver.SKIP
 
+        def _unnest(_pt, res_):
+            if isinstance(res_[0], str):
+                save_dict[_pt[0] + '::' + res_[0]] = res_[1]
+            elif isinstance(res_[0], (list, tuple)):
+                for _r in res_: _unnest(_pt, _r)
+            else: save_dict[pt[0]] = _res
+
         save_dict = OrderedDict()
         for pt in processed_items:
-            save_dict[pt[0]] = _compute_value(pt, save_dict)
+            _res = _compute_value(pt, save_dict)
+            if isinstance(_res, (list, tuple)):
+                _unnest(pt, _res)
+            else:
+                save_dict[pt[0]] = _compute_value(pt, save_dict)
 
         if self.timer: save_dict['SKIP::Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
 
