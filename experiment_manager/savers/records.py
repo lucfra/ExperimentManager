@@ -457,7 +457,7 @@ class COS:
             # if not _partial_record: return False  # nothing yet
             res = _cos._check_for_improvements(_partial_record)
             self.best = _cos.best
-            self.best_record = cos.best_record
+            self.best_record = _cos.best_record
             return res
 
         return _call
