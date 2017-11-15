@@ -5,6 +5,8 @@ import tensorflow as tf
 import numpy as np
 from functools import wraps
 
+from copy import deepcopy
+
 from experiment_manager import plots
 from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list, flatten_list
@@ -456,8 +458,10 @@ class COS:
         def _call(stp, _, saver, _partial_record):
             # if not _partial_record: return False  # nothing yet
             res = _cos._check_for_improvements(_partial_record)
+            print(res)
+            print(_cos.best)
             self.best = _cos.best
-            self.best_record = _cos.best_record
+            self.best_record = deepcopy(_cos.best_record)
             return res
 
         return _call
@@ -491,7 +495,7 @@ class COS:
                     remaining_patience = patience
                 print('remaining_patience', remaining_patience)
                 self.best = _cos.best  # update this object best score
-                self.best_record = _cos.best_record
+                self.best_record = deepcopy(_cos.best_record)
             t += step
 
     def _check_for_improvements(self, _records):
@@ -509,7 +513,7 @@ class COS:
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
             if self.comparator(self.best, score):
                 self.best = score
-                self.best_record = _records
+                self.best_record = deepcopy(_records)
                 return True
             else: return False
         else: return None
