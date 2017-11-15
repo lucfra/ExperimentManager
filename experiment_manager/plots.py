@@ -17,7 +17,7 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
     if clear_output:
         try: c_out()
         except: pass
-    print(saver_or_history)
+    # print(saver_or_history)
     if isinstance(saver_or_history, (list, tuple)):
         return [autoplot(soh, saver, append_string, clear_output=False) for soh in saver_or_history]
     if isinstance(saver_or_history, Saver):
@@ -30,7 +30,7 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
         if history is None:
             return 'nothing yet...'
     else: history = saver_or_history
-    print(history)
+    # print(history)
 
     # noinspection PyBroadException
     def _simple_plot(_title, _label, _v):
