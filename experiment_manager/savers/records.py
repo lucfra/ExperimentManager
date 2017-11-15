@@ -366,6 +366,7 @@ def model(_model, condition=True, save_step=False):
     def _save_model(step, _, _saver):
         if _saver.collect_data:
             _saver.save_model(_model, step=step if save_step else None)
+            print('SAVED')
             return 'SAVED'
     return direct('SKIP::model::%.20s' % _model.name, _save_model, condition)
 
