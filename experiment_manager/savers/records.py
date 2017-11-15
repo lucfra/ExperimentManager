@@ -507,6 +507,7 @@ class COS:
         if self.score_name not in _records:
             print('COS warning: %s not found in partial_record, score must be computed before this' % self.score_name,
                   file=sys.stderr)
+            return None
         score = _records[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
             if self.comparator(self.best, score):
