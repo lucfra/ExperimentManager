@@ -17,18 +17,20 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
     if clear_output:
         try: c_out()
         except: pass
+    print(saver_or_history)
     if isinstance(saver_or_history, (list, tuple)):
         return [autoplot(soh, saver, append_string, clear_output=False) for soh in saver_or_history]
     if isinstance(saver_or_history, Saver):
         saver = saver_or_history
         try:
-            history = saver.load_obj('all%s' % append_string)
+            history = saver.load_obj('all__%s' % append_string)
         except FileNotFoundError:
             history = saver.pack_save_dictionaries(erase_others=False, save_packed=False,
                                                    append_string=append_string)
         if history is None:
             return 'nothing yet...'
     else: history = saver_or_history
+    print(history)
 
     # noinspection PyBroadException
     def _simple_plot(_title, _label, _v):
