@@ -528,7 +528,8 @@ class COS:
     def rec_best_record(self, add_name=False):
         key = 'HIDE::best record'
         if add_name: key += '::' + self.score_name
-        return direct(key, lambda: {k: v for k, v in self.best_record if not k == key} if self.best_record else None)
+        return direct(key, lambda: {k: v for k, v in self.best_record.items()
+                                    if not k == key} if self.best_record else None)
 
 
 if __name__ == '__main__':
