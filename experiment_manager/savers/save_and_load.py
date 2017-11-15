@@ -511,14 +511,15 @@ class Saver:
                 save_dict[_pt[0] + '::' + res_[0]] = res_[1]
             elif isinstance(res_[0], (list, tuple)):
                 for _r in res_: _unnest(_pt, _r)
-            else: save_dict[pt[0]] = _res
+            else: save_dict[pt[0]] = res_
 
         save_dict = OrderedDict()
         for pt in processed_items:
-            if isinstance(_res, (list, tuple)):
-                _unnest(pt, _res)
+            rss = _compute_value(pt, save_dict)
+            if isinstance(rss, (list, tuple)):
+                _unnest(pt, rss)
             else:
-                save_dict[pt[0]] = _compute_value(pt, save_dict)
+                save_dict[pt[0]] = rss
 
         if self.timer: save_dict['SKIP::Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
 
