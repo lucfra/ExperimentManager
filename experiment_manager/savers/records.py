@@ -366,7 +366,6 @@ def model(_model, condition=True, save_step=False):
     def _save_model(step, _, _saver):
         if _saver.collect_data:
             _saver.save_model(_model, step=step if save_step else None)
-            print('SAVED')
             return 'SAVED'
     return direct('SKIP::model::%.20s' % _model.name, _save_model, condition)
 
@@ -459,8 +458,6 @@ class COS:
         def _call(stp, _, saver, _partial_record):
             # if not _partial_record: return False  # nothing yet
             res = _cos._check_for_improvements(_partial_record)
-            print(res)
-            print(_cos.best)
             self.best = _cos.best
             self.best_record = deepcopy(_cos.best_record)
             return res
@@ -508,7 +505,7 @@ class COS:
         """
         if _records is None: return None
         if self.score_name not in _records:
-            print('COS warning: %s not found in partial_record, score must be computed before this',
+            print('COS warning: %s not found in partial_record, score must be computed before this' % self.score_name,
                   file=sys.stderr)
         score = _records[self.score_name]
         if not isinstance(score, str):  # to avoids SKIP and/or other caught errors in saver.last_record
