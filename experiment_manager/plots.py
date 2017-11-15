@@ -52,7 +52,9 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
             for kk, v in _dict_k.items():
                 _simple_plot(k, kk, v)
             if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
-            if saver and saver.collect_data: saver.save_fig(k + '_' + append_string)
+            if saver and saver.collect_data:
+                saver.save_fig(k + '_' + append_string)
+                saver.save_fig(k + '_' + append_string, extension='png')
             plt.show()
     print('='*50)
     return 'done...'
