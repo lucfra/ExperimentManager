@@ -512,10 +512,6 @@ class COS:
             if self.comparator(self.best, score):
                 self.best = score
                 self.best_record = deepcopy(_records)
-                print('BEST RECORD')
-                print(self.best_record)
-                print('RECORD')
-                print(_records)
                 return True
             else: return False
         else: return None
