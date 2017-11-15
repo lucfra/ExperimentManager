@@ -22,11 +22,14 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
         return [autoplot(soh, saver, append_string, clear_output=False) for soh in saver_or_history]
     if isinstance(saver_or_history, Saver):
         saver = saver_or_history
-        try:
-            history = saver.load_obj('all__%s' % append_string)
-        except FileNotFoundError:
-            history = saver.pack_save_dictionaries(erase_others=False, save_packed=False,
-                                                   append_string=append_string)
+        history = saver.pack_save_dictionaries(erase_others=False, save_packed=False,
+                                               append_string=append_string)
+        if history is None:
+            try:
+                history = saver.load_obj('all__%s' % append_string)
+            except FileNotFoundError:
+                print('Packed object not found', file=sys.stderr)
+
         if history is None:
             return 'nothing yet...'
     else: history = saver_or_history
@@ -55,8 +58,8 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
                 _simple_plot(k, kk, v)
             if all([kk for kk in _dict_k.keys()]): plt.legend(loc=0)
             if saver and saver.collect_data:
-                saver.save_fig(k + '_' + append_string)
-                saver.save_fig(k + '_' + append_string, extension='png')
+                saver.save_fig(append_string + '_' + k)
+                saver.save_fig(append_string + '_' + k, extension='png')
             plt.show()
     print('='*50)
     return 'done...'
