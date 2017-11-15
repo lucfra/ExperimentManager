@@ -512,6 +512,10 @@ class COS:
             if self.comparator(self.best, score):
                 self.best = score
                 self.best_record = deepcopy(_records)
+                print('BEST RECORD')
+                print(self.best_record)
+                print('RECORD')
+                print(_records)
                 return True
             else: return False
         else: return None
@@ -519,7 +523,7 @@ class COS:
     def rec_score(self, add_name=False):
         key = 'SKIP::best score'
         if add_name: key += '::' + self.score_name
-        return direct('SKIP::best::' + self.score_name, lambda: self.best)
+        return direct(key, lambda: self.best)
 
     def rec_best_record(self, add_name=False):
         key = 'HIDE::best record'
