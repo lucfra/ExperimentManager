@@ -515,17 +515,17 @@ class Saver:
 
         save_dict = OrderedDict()
         for pt in processed_items:
-            _res = _compute_value(pt, save_dict)
             if isinstance(_res, (list, tuple)):
                 _unnest(pt, _res)
             else:
-                save_dict[pt[0]] = _res
+                save_dict[pt[0]] = _compute_value(pt, save_dict)
 
         if self.timer: save_dict['SKIP::Elapsed time (%s)' % self.timer.unit] = self.timer.elapsed_time()
 
         if do_print:
             if tabulate:
-                print(tabulate([(k, v) for k, v in save_dict.items() if not k.startswith('HIDE')],
+                print(tabulate([(k, v) for k, v in save_dict.items() if not k.startswith('HIDE')
+                                ],
                                headers=('Step %s' % step, '/'.join(self.experiment_names)),
                                floatfmt='.5f'))
                 print()
