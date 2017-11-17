@@ -111,10 +111,13 @@ class on_run(on_hyperiteration):
 
     def _wrap(self):
         self._unwrapped.append(tf.Session.run)
+        self._unwrapped.append(tf.InteractiveSession.run)
         tf.Session.run = self._saver_wrapper(tf.Session.run)
+        tf.InteractiveSession.run = self._saver_wrapper(tf.InteractiveSession.run)
 
     def _unwrap(self):
         tf.Session.run = self._unwrapped[0]
+        tf.InteractiveSession.run = self._unwrapped[1]
 
     def _execute_save(self, res, *args, **kwargs):
         if self._uninitialized:
@@ -125,6 +128,8 @@ class on_run(on_hyperiteration):
         super()._execute_save(res, *args, **kwargs)
         self._wrap()
 
+
+# noinspection PyPep8Naming
 class on_far(on_run):
 
     def _wrap(self):
