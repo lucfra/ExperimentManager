@@ -17,6 +17,15 @@ def as_list(obj):
     return obj if isinstance(obj, list) else [obj]
 
 
+def maybe_call(obj, *args, **kwargs):
+    """
+    Calls obj with args and kwargs and return its result if obj is callable, otherwise returns obj.
+    """
+    if callable(obj):
+        return obj(*args, **kwargs)
+    return obj
+
+
 def as_tuple_or_list(obj):
     """
     Make sure that `obj` is a tuple or a list and eventually converts it into a list with a single element

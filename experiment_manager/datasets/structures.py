@@ -7,6 +7,8 @@ import scipy.sparse as sc_sp
 from experiment_manager.datasets.utils import maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
     convert_sparse_matrix_to_sparse_tensor
 
+from experiment_manager.utils import maybe_call
+
 
 class Datasets:
     """
@@ -381,30 +383,23 @@ class ExampleVisiting:
 
         return self
 
-    def create_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
-        return self.create_feed_dict_supplier(x, y, other_feeds=other_feeds,
-                                              lambda_feeds=lambda_feeds, name=name)
+    def create_supplier(self, x, y, *other_feeds, name=None):
+        return self.create_feed_dict_supplier(x, y, *other_feeds, name=name)
 
-    def create_feed_dict_supplier(self, x, y, other_feeds=None, lambda_feeds=None, name=None):
+    def create_feed_dict_supplier(self, x, y, *other_feeds, name=None):
         """
 
         :param name: optional name for this supplier
         :param x: placeholder for independent variable
         :param y: placeholder for dependent variable
-        :param lambda_feeds: dictionary of placeholders: number_of_example -> substitution
         :param other_feeds: dictionary of other feeds (e.g. dropout factor, ...) to add to the input output
                             feed_dict
         :return: a function that generates a feed_dict with the right signature for Reverse and Forward HyperGradient
                     classes
         """
 
-        if not lambda_feeds:
-            lambda_processed_feeds = {}
-        if not other_feeds:
-            other_feeds = {}
-
         def _training_supplier(step=None):
-            nonlocal lambda_processed_feeds, other_feeds
+            nonlocal other_feeds
 
             if step >= self.T:
                 if step % self.T == 0:
@@ -424,11 +419,13 @@ class ExampleVisiting:
 
             bx = self.dataset.data[nb, :]
             by = self.dataset.target[nb, :]
-            if lambda_feeds:
-                lambda_processed_feeds = {k: v(nb) for k, v in lambda_feeds.items()}
-            else:
-                lambda_processed_feeds = {}
-            return {**{x: bx, y: by}, **other_feeds, **lambda_processed_feeds}
+
+            # if lambda_feeds:  # this was previous implementation... dunno for what it was used for
+            #     lambda_processed_feeds = {k: v(nb) for k, v in lambda_feeds.items()}  previous implementation...
+            #  looks like lambda was
+            # else:
+            #     lambda_processed_feeds = {}
+            return merge_dicts({x: bx, y: by}, *[maybe_call(of, step) for of in other_feeds])
 
         if name:
             NAMED_SUPPLIER[name] = _training_supplier
