@@ -101,3 +101,23 @@ def GPU_CONFIG():
     CONFIG_GPU_GROWTH = tf.ConfigProto(allow_soft_placement=True)
     CONFIG_GPU_GROWTH.gpu_options.allow_growth = True
     return CONFIG_GPU_GROWTH
+
+
+# SOME SCORING UTILS FUNCTIONS
+
+half_int = lambda _m: 1.96*np.std(_m)/np.sqrt(len(_m))
+
+
+def mean_std_ci(measures, mul=1., tex=False):
+    """
+    Computes mean, standard deviation and 95% half-confidence interval for a list of measures.
+
+    :param measures: list
+    :param mul: optional multiplication coefficient (e.g. for percentage)
+    :param tex: if True returns mean +- half_conf_interval for latex
+    :return: a list or a string in latex
+    """
+    measures = np.array(measures)*mul
+    ms = np.mean(measures), np.std(measures), half_int(measures)
+    return ms if not tex else r"${:.2f} \pm {:.2f}$".format(ms[0], ms[2])
+

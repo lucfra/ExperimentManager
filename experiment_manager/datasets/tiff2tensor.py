@@ -53,7 +53,7 @@ def tensor_to_images(prefix, tensor):
         # pbar.finish()
 
 
-def convert_mini_imagenet(_folder=None):
+def convert_mini_imagenet(_folder=None, resize=None):
     for st in ['train', 'val', 'test']:
         folder = os.path.join(_folder or em.load.MINI_IMAGENET_FOLDER_RES84, st)
         classes = os.listdir(folder)
@@ -62,9 +62,9 @@ def convert_mini_imagenet(_folder=None):
             files += [os.path.join(folder, os.path.join(c, f)) for f in os.listdir(os.path.join(folder, c))]
         # print(files)
         n = len(files)
-        img_shape = img_to_array(files[0]).shape
+        img_shape = img_to_array(files[0], resize=resize).shape
 
-        img = img_to_array(files[0])
+        img = img_to_array(files[0], resize=resize)
         print(img)
         print(img.dtype)
 
@@ -74,7 +74,7 @@ def convert_mini_imagenet(_folder=None):
 
 
 if __name__ == '__main__':
-    convert_mini_imagenet(sys.argv[1] if len(sys.argv) > 1 else None)
+    convert_mini_imagenet(sys.argv[1] if len(sys.argv) > 1 else None, resize=None)
     # base = '../vasculature_data'
     # orig_files = ['{}/orig/097000_164000_08600000{:0>2d}.tif'.format(base, z) for z in range(100)]
     # target_files = ['{}/GT/097000_164000_086000-labels-stack-intero-smooth00{:0>2d}.tif'.format(base, z) for z in range(100)]
