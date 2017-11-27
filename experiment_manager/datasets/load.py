@@ -63,7 +63,8 @@ MINI_IMAGENET_FOLDER_V2 = join(DATA_FOLDER, join('imagenet', 'mini_v2'))
 MINI_IMAGENET_FOLDER_V3 = join(DATA_FOLDER, join('imagenet', 'mini_v3'))
 
 
-def balanced_choice_wr(a, num, rand):
+def balanced_choice_wr(a, num, rand=None):
+    rand = em.utils.get_rand_state(rand)
     lst = [len(a)] * (num // len(a)) + [num % len(a)]
     return np.concatenate(
         [rand.choice(a, size=(d,), replace=False) for d in lst]
@@ -157,7 +158,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
 
             _dts = []
             for ns in em.as_tuple_or_list(num_examples):
-                classes = balanced_choice_wr(rand, random_classes, ns)
+                classes = balanced_choice_wr(random_classes, ns, rand)
 
                 all_images = {cls: list(clss[cls]) for cls in classes}
                 data, targets, sample_info = [], [], []
