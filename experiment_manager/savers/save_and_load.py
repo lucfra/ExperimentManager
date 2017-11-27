@@ -586,7 +586,7 @@ class Saver:
         # TODO maybe use os.sep ?
         alls = sorted([e for e in glob.glob(self.directory + '/Obj_data/all*')], key=os.path.getctime)
         return OrderedDict(
-            [(_a.split('/')[-1], self.load_obj(_a.split('/')[-1])) for _a in alls])
+            [('.'.join(_a.split('/')[-1].split('.')[:-1]), self.load_obj(_a.split('/')[-1])) for _a in alls])
 
     def record(self, *what, where='hyper', append_string='', every=1):
         # idea [getting better].
