@@ -4,6 +4,11 @@ import sys
 from experiment_manager.utils import merge_dicts
 import scipy.sparse as sc_sp
 
+try:
+    import intervaltree as it
+except ImportError:
+    it = None
+
 from experiment_manager.datasets.utils import maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
     convert_sparse_matrix_to_sparse_tensor
 
@@ -228,10 +233,11 @@ class MetaDataset(Dataset):
         """
         raise NotImplementedError()
 
-    def generate(self, count, batch_size=1, *args, **kwargs):
+    def generate(self, count, batch_size=1, seed=None, *args, **kwargs):
         """
         Generator of datasets
 
+        :param seed:
         :param count:
         :param batch_size:
         :param args:
@@ -240,6 +246,8 @@ class MetaDataset(Dataset):
         """
         if not args: args = self.args
         if not kwargs: kwargs = self.kwargs
+        if seed is not None:
+            np.random.seed(seed)
         for _ in range(count):
             if batch_size == 1:
                 yield self.generate_datasets(*args, **kwargs)
@@ -277,7 +285,7 @@ class WindowedData(object):
         :param process_all: (default False) if True adds context to all data at object initialization.
                             Otherwise the windowed data is created in runtime.
         """
-        import intervaltree as it
+        assert it is not None, 'NEED PACKAGE INTERVALTREE!'
         self.window = window
         self.data = data
         base_shape = self.data.shape
