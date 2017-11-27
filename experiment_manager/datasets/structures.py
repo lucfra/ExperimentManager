@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 
-from experiment_manager.utils import merge_dicts
+from experiment_manager.utils import merge_dicts, get_rand_state
 import scipy.sparse as sc_sp
 
 try:
@@ -222,7 +222,7 @@ class MetaDataset(Dataset):
         self.args = args
         self.kwargs = kwargs
 
-    def generate_datasets(self, *args, **kwargs):
+    def generate_datasets(self, rand=None, *args, **kwargs):
         """
         Generates and returns a single Datasets (possibly composed by training, validation and test sets)
         according to args and kwargs
@@ -233,11 +233,11 @@ class MetaDataset(Dataset):
         """
         raise NotImplementedError()
 
-    def generate(self, count, batch_size=1, seed=None, *args, **kwargs):
+    def generate(self, count, batch_size=1, rand=None, *args, **kwargs):
         """
         Generator of datasets
 
-        :param seed:
+        :param random:
         :param count:
         :param batch_size:
         :param args:
@@ -246,15 +246,14 @@ class MetaDataset(Dataset):
         """
         if not args: args = self.args
         if not kwargs: kwargs = self.kwargs
-        if seed is not None:
-            np.random.seed(seed)
+        rand = get_rand_state(rand)
         for _ in range(count):
             if batch_size == 1:
-                yield self.generate_datasets(*args, **kwargs)
+                yield self.generate_datasets(rand=rand, *args, **kwargs)
             else:
-                yield self.generate_batch(batch_size, *args, **kwargs)
+                yield self.generate_batch(batch_size, rand=rand, *args, **kwargs)
 
-    def generate_batch(self, batch_size, *args, **kwargs):
+    def generate_batch(self, batch_size, rand=None, *args, **kwargs):
         """
         Generates a batch of Datasets
 
@@ -263,7 +262,7 @@ class MetaDataset(Dataset):
         :param kwargs:
         :return:
         """
-        return [self.generate_datasets(*args, **kwargs) for _ in range(batch_size)]
+        return [self.generate_datasets(rand, *args, **kwargs) for _ in range(batch_size)]
 
     @property
     def dim_data(self, *args, **kwargs):

@@ -105,6 +105,24 @@ def namedtuple_with_defaults(typename, field_names, default_values=()):
     return T
 
 
+def get_rand_state(rand):
+    """
+    Utility methods for getting a `RandomState` object.
+
+    :param rand: rand can be None (new State will be generated),
+                    np.random.RandomState (it will be returned) or an integer (will be treated as seed).
+
+    :return: a `RandomState` object
+    """
+    if isinstance(rand, np.random.RandomState):
+        return rand
+    elif isinstance(rand, (int, np.ndarray, list)) or rand is None:
+        return np.random.RandomState(rand)
+    else:
+        raise ValueError('parameter rand {} has wrong type'.format(rand))
+
+
+
 def GPU_CONFIG():
     import tensorflow as tf
     CONFIG_GPU_GROWTH = tf.ConfigProto(allow_soft_placement=True)
