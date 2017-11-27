@@ -157,7 +157,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
 
             _dts = []
             for ns in em.as_tuple_or_list(num_examples):
-                classes = balanced_choice_wr(random_classes, ns)
+                classes = balanced_choice_wr(rand, random_classes, ns)
 
                 all_images = {cls: list(clss[cls]) for cls in classes}
                 data, targets, sample_info = [], [], []
