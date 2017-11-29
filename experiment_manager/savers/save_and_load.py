@@ -508,7 +508,10 @@ class Saver:
 
         def _unnest(_pt, res_):
             if isinstance(res_[0], str):
-                save_dict[_pt[0] + '::' + res_[0]] = res_[1]
+                if res_[0] == '':
+                    save_dict[res_[0]] = res_[1]
+                else:
+                    save_dict[_pt[0] + '::' + res_[0]] = res_[1]
             elif isinstance(res_[0], (list, tuple)):
                 for _r in res_: _unnest(_pt, _r)
             else: save_dict[pt[0]] = res_
