@@ -1,8 +1,13 @@
 import numpy as np
 import sys
 
-from experiment_manager.utils import merge_dicts
+from experiment_manager.utils import merge_dicts, get_rand_state
 import scipy.sparse as sc_sp
+
+try:
+    import intervaltree as it
+except ImportError:
+    it = None
 
 from experiment_manager.datasets.utils import maybe_cast_to_scalar, pad, stack_or_concat, vstack, \
     convert_sparse_matrix_to_sparse_tensor
@@ -217,7 +222,7 @@ class MetaDataset(Dataset):
         self.args = args
         self.kwargs = kwargs
 
-    def generate_datasets(self, *args, **kwargs):
+    def generate_datasets(self, rand=None, *args, **kwargs):
         """
         Generates and returns a single Datasets (possibly composed by training, validation and test sets)
         according to args and kwargs
@@ -228,10 +233,11 @@ class MetaDataset(Dataset):
         """
         raise NotImplementedError()
 
-    def generate(self, count, batch_size=1, *args, **kwargs):
+    def generate(self, count, batch_size=1, rand=None, *args, **kwargs):
         """
         Generator of datasets
 
+        :param random:
         :param count:
         :param batch_size:
         :param args:
@@ -240,13 +246,14 @@ class MetaDataset(Dataset):
         """
         if not args: args = self.args
         if not kwargs: kwargs = self.kwargs
+        rand = get_rand_state(rand)
         for _ in range(count):
             if batch_size == 1:
-                yield self.generate_datasets(*args, **kwargs)
+                yield self.generate_datasets(rand=rand, *args, **kwargs)
             else:
-                yield self.generate_batch(batch_size, *args, **kwargs)
+                yield self.generate_batch(batch_size, rand=rand, *args, **kwargs)
 
-    def generate_batch(self, batch_size, *args, **kwargs):
+    def generate_batch(self, batch_size, rand=None, *args, **kwargs):
         """
         Generates a batch of Datasets
 
@@ -255,7 +262,7 @@ class MetaDataset(Dataset):
         :param kwargs:
         :return:
         """
-        return [self.generate_datasets(*args, **kwargs) for _ in range(batch_size)]
+        return [self.generate_datasets(rand, *args, **kwargs) for _ in range(batch_size)]
 
     @property
     def dim_data(self, *args, **kwargs):
@@ -277,7 +284,7 @@ class WindowedData(object):
         :param process_all: (default False) if True adds context to all data at object initialization.
                             Otherwise the windowed data is created in runtime.
         """
-        import intervaltree as it
+        assert it is not None, 'NEED PACKAGE INTERVALTREE!'
         self.window = window
         self.data = data
         base_shape = self.data.shape
