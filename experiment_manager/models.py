@@ -3,7 +3,7 @@ import sys
 import tensorflow.contrib.layers as tcl
 
 
-from experiment_manager import filter_vars
+from experiment_manager import filter_vars, as_tuple_or_list
 
 
 class Network(object):
@@ -147,7 +147,7 @@ class FeedForwardNet(Network):
                  var_collections=(tf.GraphKeys.GLOBAL_VARIABLES, tf.GraphKeys.TRAINABLE_VARIABLES),
                  output_weight_initializer=tf.zeros_initializer,
                  deterministic_initialization=False, reuse=False):
-        self.dims = dims
+        self.dims = as_tuple_or_list(dims)
         self.activation = activation
         self.var_collections = var_collections
         self.output_weight_initializer = output_weight_initializer

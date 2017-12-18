@@ -8,7 +8,7 @@ from functools import wraps
 import time
 from copy import deepcopy
 
-from experiment_manager import plots
+from experiment_manager import plots, utils
 from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list, flatten_list
 import sys
@@ -73,14 +73,13 @@ class on_hyperiteration:
         return _saver_wrapped
 
     def _initialize_wrapper(self, f):  # this should be good since
-        import rfho as rf
 
         @wraps(f)
         def _initialize_wrapped(*args, **kwargs):
             first_init = f(*args, **kwargs)
             # add savers just at the first initialization
             if first_init:
-                self._processed_items += rf.flatten_list(
+                self._processed_items += utils.flatten_list(
                     [Saver.process_items(*e(*args, **kwargs)) for e in self._record_what])
                 # self._execute_save('INIT', *args, **kwargs)
 
@@ -274,7 +273,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
     if isinstance(fd, str) and not rec_name: rec_name = fd
 
     def _call(*args, **_kwargs):
-        import rfho as rf
+        # import rfho as rf
         nonlocal rec_name, _tensors
         if _tensors:
             _tensors = [tf.get_default_graph().get_tensor_by_name(tns + ':0') if isinstance(tns, str)
@@ -290,7 +289,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
 
         if rec_name: rec_name += '::'  # maybe find a better way
 
-        _rs2 = flatten_list([rec_name + rf.simple_name(tns.name),
+        _rs2 = flatten_list([rec_name + tns.op.name,
                              op(tns),
                              _process_feed_dicts_for_rec(fd, *args, **_kwargs),
                              condition]
