@@ -140,7 +140,8 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
                 for img_name in all_images:
                     img = imread(join(_base_folder, join(c, img_name)))
 
-                    img = 1. - imresize(img, size=(28, 28, 1), interp='lanczos') / 255.
+                    # img = 1. - imresize(img, size=(28, 28, 1), interp='lanczos') / 255.
+                    img = 1. - np.reshape(img, (28, 28, 1))/ 255.
                     for rot in self._rotations:
                         img = rotate(img,  rot, reshape=False)
                         self._loaded_images[c + os.path.sep + 'rot_' + str(rot)][img_name] = img
