@@ -1,5 +1,7 @@
 import glob
 
+import tensorflow as tf
+
 from experiment_manager.utils import as_list
 import time
 from collections import OrderedDict, defaultdict
@@ -610,7 +612,7 @@ class Saver:
         from experiment_manager.savers import records
         associations = {'hyper': records.on_hyperiteration,
                         'run': records.on_run,
-                        'forward': records.on_forward,
+                        # 'forward': records.on_forward,
                         'far': records.on_far}
         assert where in associations, 'param where must be one of %s' % list(associations.keys())
         return associations[where](self, *what, append_string=append_string, every=every)
@@ -700,7 +702,6 @@ class Saver:
         restore_model(model, step=step, session=session, root_dir=self.directory, notebook_mode=False)
 
     def save_tf(self, var_list=None, name='save_tf', step=None, session=None, **saver_kwargs):
-        import tensorflow as tf
         tf.train.Saver(var_list=var_list, **saver_kwargs).save(
             session or tf.get_default_session(), join_paths(
                 join_paths(self.directory, FOLDER_NAMINGS['MODELS_DIR']), name),
@@ -708,7 +709,6 @@ class Saver:
         )
 
     def restore_tf(self, var_list=None, name='save_tf', session=None, **saver_kwargs):
-        import tensorflow as tf
         tf.train.Saver(var_list=var_list, **saver_kwargs).restore(
             session or tf.get_default_session(), join_paths(
                 join_paths(self.directory, FOLDER_NAMINGS['MODELS_DIR']), name)

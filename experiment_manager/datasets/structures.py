@@ -1,5 +1,10 @@
+"""
+Module that contains datasets classes for managing data.
+"""
 import numpy as np
 import sys
+
+import tensorflow as tf
 
 from experiment_manager.utils import merge_dicts, get_rand_state
 import scipy.sparse as sc_sp
@@ -160,8 +165,6 @@ class Dataset:
         return 1 if len(shape) == 1 else maybe_cast_to_scalar(shape[1:])
 
     def convert_to_tensor(self, keep_sparse=True):
-
-        import tensorflow as tf
         SPARSE_SCIPY_MATRICES = (sc_sp.csr.csr_matrix, sc_sp.coo.coo_matrix)
         matrices = ['_data', '_target']
         for att in matrices:
@@ -227,6 +230,7 @@ class MetaDataset(Dataset):
         Generates and returns a single Datasets (possibly composed by training, validation and test sets)
         according to args and kwargs
 
+        :param rand: random seed, state or None
         :param args:
         :param kwargs:
         :return: `Datasets`
@@ -237,12 +241,12 @@ class MetaDataset(Dataset):
         """
         Generator of datasets
 
-        :param random:
-        :param count:
-        :param batch_size:
+        :param rand: random seed, state or None
+        :param count: number of datasets to generate
+        :param batch_size: number of episodes to generate at each call
         :param args:
         :param kwargs:
-        :return:
+        :return: one or a list of Datasets objects
         """
         if not args: args = self.args
         if not kwargs: kwargs = self.kwargs
@@ -256,11 +260,6 @@ class MetaDataset(Dataset):
     def generate_batch(self, batch_size, rand=None, *args, **kwargs):
         """
         Generates a batch of Datasets
-
-        :param batch_size:
-        :param args:
-        :param kwargs:
-        :return:
         """
         return [self.generate_datasets(rand, *args, **kwargs) for _ in range(batch_size)]
 
@@ -299,7 +298,7 @@ class WindowedData(object):
     def generate_all(self):
         return self[:]
 
-    def __getitem__(self, item):  # TODO should be right for all the common use... But better write down a TestCase
+    def __getitem__(self, item):
         if hasattr(self, 'process_all') and self.process_all:  # keep attr check!
             return self.data[item]
         if isinstance(item, int):
@@ -307,7 +306,7 @@ class WindowedData(object):
         if isinstance(item, tuple):
             if len(item) == 2:
                 rows, columns = item
-                if isinstance(rows, int) and isinstance(columns, int):  # TODO check here
+                if isinstance(rows, int) and isinstance(columns, int):
                     # do you want the particular element?
                     return self.get_context(item=rows)[columns]
             else:

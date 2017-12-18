@@ -1,6 +1,10 @@
 from experiment_manager.utils import *
 import experiment_manager as em
 
+import tensorflow as tf
+import scipy.sparse as sc_sp
+import scipy as sp
+
 
 def redivide_data(datasets, partition_proportions=None, shuffle=False, filters=None,
                   maps=None, balance_classes=False):
@@ -23,7 +27,7 @@ def redivide_data(datasets, partition_proportions=None, shuffle=False, filters=N
                         than one sample, for data augmentation)
     :return: a list of datasets of length equal to the (possibly augmented) partition_proportion
     """
-    import scipy as sp
+
 
     all_data = vstack([get_data(d) for d in datasets])
     all_labels = stack_or_concat([get_targets(d) for d in datasets])
@@ -162,14 +166,10 @@ def vstack(lst):
     :param lst:
     :return:
     """
-    import scipy.sparse as sc_sp
-    import scipy as sp
     return sp.vstack(lst) if sp and isinstance(lst[0], sc_sp.csr.csr_matrix) else np.vstack(lst)
 
 
 def convert_sparse_matrix_to_sparse_tensor(X):
-    import tensorflow as tf
-    import scipy.sparse as sc_sp
     if isinstance(X, sc_sp.csr.csr_matrix):
         coo = X.tocoo()
         indices = np.mat([coo.row, coo.col]).transpose()

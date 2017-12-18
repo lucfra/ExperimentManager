@@ -1,8 +1,9 @@
 import tensorflow as tf
 import sys
+import tensorflow.contrib.layers as tcl
+
 
 from experiment_manager import filter_vars
-from tensorflow.contrib import layers as tcl
 
 
 class Network(object):
@@ -120,22 +121,6 @@ class Network(object):
                 [ss.run(v_op, feed_dict={self._var_init_placeholder: val})
                  for v_op, val in zip(self._assign_int, self._var_list_initial_values)]
 
-    # def vectorize(self, *outs, augment=0):
-    #     """
-    #     Calls `vectorize_model` with the variables of this model and specified outputs.
-    #     Moreover it registers this model on the resulting `MergedVariable` and the resulting merged variable
-    #     in the model as the attribute `self.w`.
-    #     (See `vectorize_model` and `mergedVariable`)
-    #
-    #     :param outs: tensors
-    #     :param augment:
-    #     :return:
-    #     """
-    #     res = rf.vectorize_model(self.var_list, *outs, augment=augment)
-    #     res[0].model = self
-    #     self.s = res[0]
-    #     return res
-
     def _variables_to_save(self):
         return self.var_list
 
@@ -186,8 +171,6 @@ class FeedForwardNet(Network):
 
 
 if __name__ == '__main__':
-    import tensorflow.contrib.layers as tcl
-
     x = tf.placeholder(tf.float32, shape=(10, 321))
     with tf.variable_scope('hji'):
         net = Network(x)

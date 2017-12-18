@@ -1,3 +1,7 @@
+"""
+Module for loading datasets
+"""
+
 from collections import defaultdict, OrderedDict
 from os.path import join
 
@@ -26,7 +30,8 @@ else:
     HELP_UBUNTU = _COMMON_BEGIN + """
     Bash command is: export DATASETS_FOLDER='absolute/path/to/dataset/folder \n
     Remember! To add the global variable kinda permanently in your system you should add export command in
-          bash.bashrc file located in etc folder.
+    bash.bashrc file located in etc folder, if you want to set it globally, or .bashrc in your home directory
+    if you want to set it only locally.
     """ + _COMMON_END
 
     HELP_WIN = _COMMON_BEGIN + """
@@ -87,7 +92,20 @@ def mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, s
 
 
 def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_examples=None,
-                  one_hot_enc=True, rand=0, n_splits=None):
+                  one_hot_enc=True, _rand=0, n_splits=None):
+    """
+    Loading function for Omniglot dataset in learning-to-learn version. Use image data as obtained from
+    https://github.com/cbfinn/maml/blob/master/data/omniglot_resized/resize_images.py
+
+    :param folder: root folder name.
+    :param std_num_classes: standard number of classes for N-way classification
+    :param std_num_examples: standard number of examples (e.g. for 1-shot 5-way should be 5)
+    :param one_hot_enc: one hot encoding
+    :param _rand: random seed or RandomState for generate training, validation, testing meta-datasets
+                    split
+    :param n_splits: num classes per split
+    :return: a Datasets of MetaDataset s
+    """
     class OmniglotMetaDataset(em.MetaDataset):
 
         def __init__(self, info=None, rotations=None, name='Omniglot', num_classes=None, num_examples=None):
@@ -131,7 +149,6 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
         def load_all(self):
             from scipy.ndimage import imread
             from scipy.ndimage.interpolation import rotate
-            from scipy.misc import imresize
             _cls = self.info['classes']
             _base_folder = self.info['base_folder']
 
@@ -139,14 +156,11 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
                 all_images = list(_cls[c])
                 for img_name in all_images:
                     img = imread(join(_base_folder, join(c, img_name)))
-
-                    # img = 1. - imresize(img, size=(28, 28, 1), interp='lanczos') / 255.
-                    img = 1. - np.reshape(img, (28, 28, 1))/ 255.
+                    img = 1. - np.reshape(img, (28, 28, 1)) / 255.
                     for rot in self._rotations:
                         img = rotate(img,  rot, reshape=False)
                         self._loaded_images[c + os.path.sep + 'rot_' + str(rot)][img_name] = img
 
-    # if sub_folders is None: sub_folders = ['train', 'val', 'test']
     alphabets = os.listdir(folder)
 
     labels_and_images = OrderedDict()
@@ -158,9 +172,9 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
                                   for ln in label_names})
 
     # divide between training validation and test meta-datasets
-    rand = em.get_rand_state(rand)
+    _rand = em.get_rand_state(_rand)
     all_clss = list(labels_and_images.keys())
-    rand.shuffle(all_clss)
+    _rand.shuffle(all_clss)
     n_splits = n_splits or (0, 1200, 1300, len(all_clss))
 
     meta_dts = []
@@ -177,7 +191,7 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
 def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num_classes=None,
                        std_num_examples=None, resize=84, one_hot_enc=True, load_all_images=True, h5=True):
     """
-    Load a meta-datasets from Mini-ImageNet. Returns a Datasets of MetaDatasets,
+    Load a meta-datasets from Mini-ImageNet. Returns a Datasets of MetaDataset s,
 
     :param folder: base folder
     :param sub_folders: optional sub-folders in which data is locate
@@ -315,9 +329,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
                 'file': file,
                 'one_hot_enc': one_hot_enc
             }, num_classes=std_num_classes, num_examples=std_num_examples))
-            # change name with shots...
-            # if std_num_classes and std_num_examples:
-            #     meta_dts[-1].name += '_shots_%s' % (std_num_examples[0]//std_num_classes)
+
     dts = em.Datasets.from_list(meta_dts)
     if load_all_images:
         import time
@@ -329,6 +341,7 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
 
 
 if __name__ == '__main__':
+    pass
     # mmi = meta_mini_imagenet()
     # # ts = mmi.train.generate_datasets(num_classes=10, num_examples=(123, 39))
     # d1 = mmi.train.all_data(seed=0)
@@ -341,5 +354,5 @@ if __name__ == '__main__':
     #
     # print(np.equal(d1.train.data[0], d2.train.data[0]))
 
-    res = meta_omniglot()
-    print(res)
+    # res = meta_omniglot()
+    # print(res)

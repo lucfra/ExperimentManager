@@ -5,6 +5,7 @@ import tensorflow as tf
 import numpy as np
 from functools import wraps
 
+import time
 from copy import deepcopy
 
 from experiment_manager import plots
@@ -12,6 +13,7 @@ from experiment_manager.savers.save_and_load import Saver
 from experiment_manager.utils import as_list, flatten_list
 import sys
 import far_ho as far
+
 
 from experiment_manager.datasets.structures import NAMED_SUPPLIER, Dataset
 
@@ -56,17 +58,10 @@ class on_hyperiteration:
         if self.saver.timer: self.saver.timer.stop()
 
     def _wrap(self):
-        import rfho as rf
-        self._unwrapped.append(rf.HyperOptimizer.initialize)
-        rf.HyperOptimizer.initialize = self._initialize_wrapper(rf.HyperOptimizer.initialize)
-
-        self._unwrapped.append(rf.HyperOptimizer.run)
-        rf.HyperOptimizer.run = self._saver_wrapper(rf.HyperOptimizer.run)  # mmm...
+        pass
 
     def _unwrap(self):
-        import rfho as rf
-        rf.HyperOptimizer.initialize = self._unwrapped[0]
-        rf.HyperOptimizer.run = self._unwrapped[1]
+        pass
 
     def _saver_wrapper(self, f):
         @wraps(f)
@@ -79,6 +74,7 @@ class on_hyperiteration:
 
     def _initialize_wrapper(self, f):  # this should be good since
         import rfho as rf
+
         @wraps(f)
         def _initialize_wrapped(*args, **kwargs):
             first_init = f(*args, **kwargs)
@@ -131,7 +127,6 @@ class on_run(on_hyperiteration):
 
 # noinspection PyPep8Naming
 class on_far(on_run):
-
     def _wrap(self):
         self._unwrapped.append(far.HyperOptimizer.run)
         far.HyperOptimizer.run = self._saver_wrapper(far.HyperOptimizer.run)
@@ -140,26 +135,26 @@ class on_far(on_run):
         far.HyperOptimizer.run = self._unwrapped[0]
 
 
-# noinspection PyClassHasNoInit,PyPep8Naming
-class on_forward(on_hyperiteration):  # context class
-    """
-    Saves at every iteration (before call of method `step_forward`)
-    """
-
-    def _wrap(self):
-        import rfho as rf
-        self._unwrapped.append(rf.HyperOptimizer.initialize)
-        rf.HyperOptimizer.initialize = self._initialize_wrapper(rf.HyperOptimizer.initialize)
-
-        self._unwrapped.append(rf.ForwardHG.step_forward)
-        rf.ForwardHG.step_forward = self._saver_wrapper(rf.ForwardHG.step_forward)  # mmm...
-
-        # self._unwrapped.append(rf.ReverseHG.)
-
-    def _unwrap(self):
-        import rfho as rf
-        rf.HyperOptimizer.initialize = self._unwrapped[0]
-        rf.ForwardHG.step_forward = self._unwrapped[1]
+# # noinspection PyClassHasNoInit,PyPep8Naming
+# class on_forward(on_hyperiteration):  # context class
+#     """
+#     Saves at every iteration (before call of method `step_forward`)
+#     """
+#
+#     def _wrap(self):
+#         import rfho as rf
+#         self._unwrapped.append(rf.HyperOptimizer.initialize)
+#         rf.HyperOptimizer.initialize = self._initialize_wrapper(rf.HyperOptimizer.initialize)
+#
+#         self._unwrapped.append(rf.ForwardHG.step_forward)
+#         rf.ForwardHG.step_forward = self._saver_wrapper(rf.ForwardHG.step_forward)  # mmm...
+#
+#         # self._unwrapped.append(rf.ReverseHG.)
+#
+#     def _unwrap(self):
+#         import rfho as rf
+#         rf.HyperOptimizer.initialize = self._unwrapped[0]
+#         rf.ForwardHG.step_forward = self._unwrapped[1]
 
 
 def autoplot(saver, name=''):
@@ -288,7 +283,7 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
             _tensors = tf.get_collection(key, scope=scope)
         elif name_contains:
             _names = flatten_list([[n.name for n in tf.get_default_graph().as_graph_def().node
-                                       if nc in n.name] for nc in as_list(name_contains)])
+                                    if nc in n.name] for nc in as_list(name_contains)])
             return _tensors(*_names, rec_name=rec_name, op=op, fd=fd, condition=True)(*args, **_kwargs)
         else:
             raise NotImplemented
@@ -296,10 +291,10 @@ def tensors(*_tensors, key=None, scope=None, name_contains=None,
         if rec_name: rec_name += '::'  # maybe find a better way
 
         _rs2 = flatten_list([rec_name + rf.simple_name(tns.name),
-                                op(tns),
-                                _process_feed_dicts_for_rec(fd, *args, **_kwargs),
-                                condition]
-                               for tns in _tensors)
+                             op(tns),
+                             _process_feed_dicts_for_rec(fd, *args, **_kwargs),
+                             condition]
+                            for tns in _tensors)
         return _rs2
 
     return _call
@@ -368,10 +363,12 @@ def model(_model, condition=True, save_step=False):
 
     :return:
     """
+
     def _save_model(step, _, _saver):
         if _saver.collect_data:
             _saver.save_model(_model, step=step if save_step else None)
             return 'SAVED'
+
     return direct('SKIP::model::%.20s' % _model.name, _save_model, condition)
 
 
@@ -460,6 +457,7 @@ class COS:
     def condition(self):
         _cos = COS(self.score_name, self.comparator, self._init_best)
 
+        # noinspection PyUnusedLocal
         def _call(stp, _, saver, _partial_record):
             # if not _partial_record: return False  # nothing yet
             res = _cos._check_for_improvements(_partial_record)
@@ -479,7 +477,8 @@ class COS:
         :param start: (default 0) initial value of step
         :param stop:  (default None) max value of step, None stands for no limit
         :param step:  (default 1) increase of iterator
-        :return:
+        :param _debug: if True adds various prints
+        :return: yield the number of iteration
         """
         _cos = COS(self.score_name, self.comparator, self._init_best)
         remaining_patience = patience
@@ -519,8 +518,10 @@ class COS:
                 self.best = score
                 self.best_record = deepcopy(_records)
                 return True
-            else: return False
-        else: return None
+            else:
+                return False
+        else:
+            return None
 
     def rec_score(self, add_name=False):
         key = 'SKIP::best score'
@@ -535,7 +536,6 @@ class COS:
 
 
 if __name__ == '__main__':
-    import time
     random_number = lambda: np.random.randint(0, 20)
     cos = COS('rn')
     _sv = Saver(['tbd'], 'rn', random_number, lambda st: st % 2 == 0, collect_data=False,
