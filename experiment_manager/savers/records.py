@@ -50,7 +50,8 @@ class on_hyperiteration:
             if self.saver.timer:  # stops the timer... maybe you want to execute it again...
                 self.saver.timer.stop()
             self.saver.pack_save_dictionaries(
-                name=self.append_string if self.append_string else 'all')
+                name=self.append_string if self.append_string else 'all',
+                append_string=self.append_string)
 
         self._unwrap()
 

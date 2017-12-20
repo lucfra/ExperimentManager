@@ -581,7 +581,8 @@ class Saver:
         for obj in objs:
             [packed_dict[k].append(v) for k, v in obj.items()]
         if save_packed:
-            self.save_obj(packed_dict, name=name + append_string)
+            _nm = append_string if append_string != '' else name
+            self.save_obj(packed_dict, name=_nm)
 
         if erase_others:
             [os.remove(f) for f in all_files]
