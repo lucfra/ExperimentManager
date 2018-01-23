@@ -122,7 +122,6 @@ def get_rand_state(rand):
         raise ValueError('parameter rand {} has wrong type'.format(rand))
 
 
-
 def GPU_CONFIG():
     import tensorflow as tf
     CONFIG_GPU_GROWTH = tf.ConfigProto(allow_soft_placement=True)

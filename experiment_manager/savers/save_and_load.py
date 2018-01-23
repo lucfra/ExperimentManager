@@ -89,12 +89,12 @@ def save_fig(name=None, root_dir=None, notebook_mode=True, default_overwrite=Fal
     # print('file saved')
 
 
-def save_obj(obj, name, root_dir=None, notebook_mode=True, default_overwrite=False):
+def save_obj(obj, name, root_dir=None, notebook_mode=True, default_overwrite=False, ext='pkgz'):
     if root_dir is None: root_dir = os.getcwd()
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['OBJ_DIR']),
                                     notebook_mode=notebook_mode)
 
-    filename = join_paths(directory, '%s.pkgz' % name)  # directory + '/%s.pkgz' % name
+    filename = join_paths(directory, '{}.{}'.format(name, ext))  # directory + '/%s.pkgz' % name
     if not default_overwrite and os.path.isfile(filename):
         overwrite = input('A file named %s already exists. Overwrite (Leave string empty for NO!)?' % filename)
         if not overwrite:
@@ -133,7 +133,7 @@ def load_obj(name, root_dir=None, notebook_mode=True):
     directory = check_or_create_dir(join_paths(root_dir, FOLDER_NAMINGS['OBJ_DIR']),
                                     notebook_mode=notebook_mode, create=False)
 
-    filename = join_paths(directory, name if name.endswith('.pkgz') else name + '.pkgz')
+    filename = join_paths(directory, name if name.endswith('.pkgz') or name.endswith('pkexp') else name + '.pkgz')
     return pkgz_load(filename)
 
 
@@ -582,7 +582,7 @@ class Saver:
             [packed_dict[k].append(v) for k, v in obj.items()]
         if save_packed:
             _nm = append_string if append_string != '' else name
-            self.save_obj(packed_dict, name=_nm)
+            self.save_obj(packed_dict, name=_nm, ext='pkexp')
 
         if erase_others:
             [os.remove(f) for f in all_files]
@@ -595,9 +595,9 @@ class Saver:
                 `pack_save_dictionary` ordered by creation time.
         """
         # TODO maybe use os.sep ?
-        alls = sorted([e for e in glob.glob(self.directory + '/Obj_data/all*')], key=os.path.getctime)
+        alls = sorted([e for e in glob.glob(self.directory + '/Obj_data/*.pkexp')], key=os.path.getctime)
         return OrderedDict(
-            [('.'.join(_a.split('/')[-1].split('.')[:-1]), self.load_obj(_a.split('/')[-1])) for _a in alls])
+            [('.'.join(_a.split('/')[-1].split('.')[:-1]), self.load_obj(_a)) for _a in alls])
 
     def record(self, *what, where='hyper', append_string='', every=1):
         # idea [getting better].
@@ -649,16 +649,17 @@ class Saver:
                         default_overwrite=self.default_overwrite, notebook_mode=False,
                         **savefig_kwargs)
 
-    def save_obj(self, obj, name):
+    def save_obj(self, obj, name, ext='pkgz'):
         """
          Object-oriented version of `save_obj`
 
+        :param ext: extension name, default pkgz
         :param obj: object to save
-        :param name: name of the file (.pkgz extension automatically added)
+        :param name: name of the file (extension automatically added)
         :return:
         """
         return save_obj(obj, name, root_dir=self.directory,
-                        default_overwrite=self.default_overwrite, notebook_mode=False)
+                        default_overwrite=self.default_overwrite, notebook_mode=False, ext=ext)
 
     def save_adjacency_matrix_for_gephi(self, matrix, name, class_names=None):
         """
