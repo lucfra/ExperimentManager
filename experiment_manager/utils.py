@@ -147,3 +147,12 @@ def mean_std_ci(measures, mul=1., tex=False):
     ms = np.mean(measures), np.std(measures), half_int(measures)
     return ms if not tex else r"${:.2f} \pm {:.2f}$".format(ms[0], ms[2])
 
+
+def leaky_relu(x, alpha, name=None):
+    """
+    Implements leaky relu with negative coefficient `alpha`
+    """
+    import tensorflow as tf
+    with tf.name_scope(name, 'leaky_relu_{}'.format(alpha)):
+        return tf.nn.relu(x) - alpha * tf.nn.relu(-x)
+
