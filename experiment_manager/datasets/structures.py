@@ -214,7 +214,7 @@ class Dataset:
         """
         return Dataset(data=vstack([d.data for d in datasets]),
                        target=stack_or_concat([d.target for d in datasets]),
-                       sample_info=stack_or_concat([d.sample_info for d in datasets]),
+                       sample_info=np.concatenate([d.sample_info for d in datasets]),
                        info={k: [d.info.get(k, None) for d in datasets]
                              for k in merge_dicts(*[d.info for d in datasets])})
 
