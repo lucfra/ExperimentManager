@@ -91,6 +91,21 @@ def mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, s
     return em.Datasets.from_list(res)
 
 
+OMNI_LIGHT = join(DATA_FOLDER, 'omniglot-light')
+
+
+def load_omni_light(folder=OMNI_LIGHT):
+    file = h5py.File(os.path.join(folder, 'omni-light.h5'), 'r')
+    return em.Datasets.from_list([
+        em.Dataset(np.array(file['X_ft_tr']), np.array(file['Y_tr']),
+                   info={'original images': np.array(file['X_orig_tr'])}),
+        em.Dataset(np.array(file['X_ft_val']), np.array(file['Y_val']),
+                   info={'original images': np.array(file['X_orig_val'])}),
+        em.Dataset(np.array(file['X_ft_test']), np.array(file['Y_test']),
+                   info={'original images': np.array(file['X_orig_test'])})
+    ])
+
+
 def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_examples=None,
                   one_hot_enc=True, _rand=0, n_splits=None):
     """
