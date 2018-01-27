@@ -91,10 +91,16 @@ def mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, s
     return em.Datasets.from_list(res)
 
 
-OMNI_LIGHT = join(DATA_FOLDER, 'omniglot-light')
+def load_omni_light(folder=join(DATA_FOLDER, 'omniglot-light')):
+    """
+    Extract from omniglot dataset with rotated images, 100 classes,
+    3 examples per class in training set
+    3 examples per class in validation set
+    15 examples per class in test set
 
-
-def load_omni_light(folder=OMNI_LIGHT):
+    :param folder:
+    :return:
+    """
     file = h5py.File(os.path.join(folder, 'omni-light.h5'), 'r')
     return em.Datasets.from_list([
         em.Dataset(np.array(file['X_ft_tr']), np.array(file['Y_tr']),
