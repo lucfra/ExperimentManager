@@ -7,10 +7,11 @@ import tensorflow as tf
 
 class SLExperiment:
 
-    def __init__(self, datasets):
+    def __init__(self, datasets, dtype=tf.float32):
         self.datasets = datasets
-        self.x = tf.placeholder(tf.float32, name='x', shape=self._compute_input_shape())
-        self.y = tf.placeholder(tf.float32, name='y', shape=self._compute_output_shape())
+        self.x = tf.placeholder(dtype, name='x', shape=self._compute_input_shape())
+        self.y = tf.placeholder(dtype, name='y', shape=self._compute_output_shape())
+        self.dtype = dtype
         self.model = None
         self.errors = {}
         self.scores = {}
