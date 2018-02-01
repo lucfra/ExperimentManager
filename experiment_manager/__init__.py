@@ -7,10 +7,20 @@ from experiment_manager.datasets.utils import redivide_data
 from experiment_manager.search_strategies import *
 from experiment_manager.experiment import *
 
+# noinspection PyBroadException
 try:
     from experiment_manager import plots
+
+    import seaborn as sbn
+
+    sbn.set(font_scale=1.3, style='whitegrid')
+    from matplotlib import rc
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
 except:
     plots = None
+    sbn = None
     print('plots module loading failure...')
 
 from tensorflow.python.platform import flags as fg
