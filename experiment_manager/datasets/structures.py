@@ -85,7 +85,7 @@ class Dataset:
      per-example basis and general infos.
     """
 
-    def __init__(self, data, target, sample_info=None, info=None, name=None):
+    def __init__(self, data, target, sample_info=None, info=None, name=None, add_bias=False):
         """
 
         :param data: Numpy array containing data
@@ -95,9 +95,12 @@ class Dataset:
         :param info: (optional) dictionary with further info about the dataset
         """
         self._tensor_mode = False
-        # self._name = name
-
         self._data = data
+        self._add_bias = add_bias
+        if self._add_bias:
+            assert isinstance(self.dim_data, int), 'Add bias not defined for non vector data'
+            self._data = np.hstack((self.data, np.ones((self.num_examples, 1))))
+
         self._target = target
         if self._data is not None:  # in meta-dataset data and target can be unspecified
             if sample_info is None:
@@ -114,6 +117,10 @@ class Dataset:
     @property
     def name(self):
         return self.info['_name']
+
+    @property
+    def bias(self):
+        return self._add_bias
 
     def _shape(self, what):
         return what.get_shape().as_list() if self._tensor_mode else what.shape

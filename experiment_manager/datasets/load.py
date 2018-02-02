@@ -91,25 +91,25 @@ def mnist(folder=None, one_hot=True, partitions=None, filters=None, maps=None, s
     return em.Datasets.from_list(res)
 
 
-def load_omni_light(folder=join(DATA_FOLDER, 'omniglot-light')):
+def omni_light(folder=join(DATA_FOLDER, 'omniglot-light'), add_bias=False):
     """
     Extract from omniglot dataset with rotated images, 100 classes,
     3 examples per class in training set
     3 examples per class in validation set
     15 examples per class in test set
-
-    :param folder:
-    :return:
     """
     file = h5py.File(os.path.join(folder, 'omni-light.h5'), 'r')
     return em.Datasets.from_list([
         em.Dataset(np.array(file['X_ft_tr']), np.array(file['Y_tr']),
-                   info={'original images': np.array(file['X_orig_tr'])}),
+                   info={'original images': np.array(file['X_orig_tr'])}, add_bias=add_bias),
         em.Dataset(np.array(file['X_ft_val']), np.array(file['Y_val']),
-                   info={'original images': np.array(file['X_orig_val'])}),
+                   info={'original images': np.array(file['X_orig_val'])}, add_bias=add_bias),
         em.Dataset(np.array(file['X_ft_test']), np.array(file['Y_test']),
-                   info={'original images': np.array(file['X_orig_test'])})
+                   info={'original images': np.array(file['X_orig_test'])}, add_bias=add_bias)
     ])
+
+
+load_omni_light = omni_light
 
 
 def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_examples=None,
