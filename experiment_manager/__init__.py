@@ -16,8 +16,8 @@ try:
     sbn.set(font_scale=1.3, style='whitegrid')
     from matplotlib import rc
 
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
+    # plt.rc('text', usetex=True)  problems on servers....
+    # plt.rc('font', family='serif')
 except:
     plots = None
     sbn = None
