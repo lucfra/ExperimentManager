@@ -12,8 +12,14 @@ import os
 import numpy as np
 import threading
 import h5py
+import sys
 
 from experiment_manager.datasets.utils import redivide_data
+
+try:
+    from sklearn.datasets import make_classification
+except ImportError:
+    make_classification = lambda *args: print('make_classification NOT LOADED, NEED SKLEARN', file=sys.stderr)
 
 from_env = os.getenv('DATASETS_FOLDER')
 if from_env:
@@ -262,7 +268,6 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
                     self._threads[-1].start()
 
         def check_loaded_images(self, n_min):
-            # print([len(v) for v in self._loaded_images.values()])
             return self._loaded_images and all([len(v) >= n_min for v in self._loaded_images.values()])
 
         def generate_datasets(self, rand=None, num_classes=None, num_examples=None, wait_for_n_min=None):
@@ -359,6 +364,16 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
         while not all(_check_available(15)):
             time.sleep(1)  # be sure that there are at least 15 images per class in each meta-dataset
     return dts
+
+
+def random_classification_datasets(examples=(100, 100, 100), features=20, classes=5):
+    def _form_dataset(scp_dat):
+        return em.Dataset(scp_dat[0], em.utils.to_one_hot_enc(scp_dat[1]))
+
+    return em.Datasets.from_list([
+        _form_dataset(make_classification(ne, features, n_classes=classes, n_informative=classes))
+        for ne in em.utils.as_tuple_or_list(examples)
+    ])
 
 
 if __name__ == '__main__':
