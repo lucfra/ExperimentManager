@@ -3,6 +3,7 @@ Contains some misc utility functions
 """
 from functools import reduce
 import collections
+import multiprocessing
 
 import numpy as np
 
@@ -155,4 +156,10 @@ def leaky_relu(x, alpha, name=None):
     import tensorflow as tf
     with tf.name_scope(name, 'leaky_relu_{}'.format(alpha)):
         return tf.nn.relu(x) - alpha * tf.nn.relu(-x)
+
+
+def execute(target, *args, **kwargs):
+    pr = multiprocessing.Process(target=target, args=args, kwargs=kwargs)
+    pr.start()
+    return pr
 
