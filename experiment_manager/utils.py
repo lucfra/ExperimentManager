@@ -7,6 +7,12 @@ import multiprocessing
 
 import numpy as np
 
+import pickle
+
+import os
+
+import pysftp
+
 
 def as_list(obj):
     """
@@ -162,4 +168,45 @@ def execute(target, *args, **kwargs):
     pr = multiprocessing.Process(target=target, args=args, kwargs=kwargs)
     pr.start()
     return pr
+
+
+def save_on_server(filename, obj, remote_path=None, server='10.255.9.75', user='franceschi', pwd='luca',
+                   keep_local=False):
+    splitted_filename = filename.split(os.path.sep)
+    if len(splitted_filename) > 1:
+        filename = splitted_filename[-1]
+        if remote_path is None: remote_path = ''
+        remote_path += os.path.sep.join(splitted_filename[:-1])
+
+    with open(filename, 'wb') as f:
+        pickle.dump(obj, f)
+
+    with pysftp.Connection(server, username=user, password=pwd) as sftp:
+        if remote_path:
+            splitted = remote_path.split(os.path.sep)
+            joined = [os.path.sep.join(splitted[:k]) for k in range(1, len(splitted) + 1)]
+            [sftp.mkdir(j) for j in joined if not sftp.exists(j)]
+        with sftp.cd(remote_path):
+            sftp.put(filename)
+
+    if not keep_local:
+        os.remove(filename)
+
+
+def open_from_server(filename, remote_path=None, server='10.255.9.75', user='franceschi', pwd='luca',
+                     keep_local=False):
+    splitted_filename = filename.split(os.path.sep)
+    if len(splitted_filename) > 1:
+        filename = splitted_filename[-1]
+        if remote_path is None: remote_path = ''
+        remote_path += os.path.sep.join(splitted_filename[:-1])
+    with pysftp.Connection(server, username=user, password=pwd) as sftp:
+        with sftp.cd(remote_path):
+            sftp.get(filename)
+    with open(filename, 'rb') as f:
+        obj = pickle.load(f)
+    if not keep_local:
+        os.remove(filename)
+    return obj
+
 

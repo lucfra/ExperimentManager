@@ -366,12 +366,14 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
     return dts
 
 
-def random_classification_datasets(examples=(100, 100, 100), features=20, classes=5):
+def random_classification_datasets(examples=(100, 100, 100), features=20, classes=5, rnd=None):
+    rnd = em.get_rand_state(rnd)
+
     def _form_dataset(scp_dat):
         return em.Dataset(scp_dat[0], em.utils.to_one_hot_enc(scp_dat[1]))
 
     return em.Datasets.from_list([
-        _form_dataset(make_classification(ne, features, n_classes=classes, n_informative=classes))
+        _form_dataset(make_classification(ne, features, n_classes=classes, n_informative=classes, random_state=rnd))
         for ne in em.utils.as_tuple_or_list(examples)
     ])
 
