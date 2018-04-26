@@ -158,8 +158,9 @@ class on_far(on_run):
 #         rf.ForwardHG.step_forward = self._unwrapped[1]
 
 
-def autoplot(saver, name=''):
-    return direct('HIDE::autoplot', lambda: plots.autoplot(saver, append_string=name))
+def autoplot(saver, name='', show_plots=True, clear_output=True):
+    return direct('HIDE::autoplot', lambda: plots.autoplot(saver, append_string=name,
+                                                           show_plots=show_plots, clear_output=clear_output))
 
 
 def direct(*items):

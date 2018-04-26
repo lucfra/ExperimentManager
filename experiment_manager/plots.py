@@ -13,7 +13,7 @@ seaborn.set_style('whitegrid')
 
 
 # noinspection PyBroadException
-def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
+def autoplot(saver_or_history, saver=None, append_string='', clear_output=True, show_plots=True):
     if clear_output:
         try: c_out()
         except: pass
@@ -60,6 +60,8 @@ def autoplot(saver_or_history, saver=None, append_string='', clear_output=True):
             if saver and saver.collect_data:
                 saver.save_fig(append_string + '_' + k)
                 saver.save_fig(append_string + '_' + k, extension='png')
-            plt.show()
+            if show_plots:
+                plt.show()
+            plt.close()
     print('='*50)
     return 'done...'
