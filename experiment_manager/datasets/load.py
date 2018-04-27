@@ -255,12 +255,12 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
                 classes = balanced_choice_wr(random_classes, ns, rand)
 
                 all_images = {cls: list(clss[cls]) for cls in classes}
-                indices, targets, sample_info = [], [], []
+                indices, targets = [], []
                 for c in classes:
                     rand.shuffle(all_images[c])
                     img_name = all_images[c][0]
                     all_images[c].remove(img_name)
-                    sample_info.append({'name': img_name, 'label': c})
+                    # sample_info.append({'name': img_name, 'label': c})
                     indices.append(clss[c][img_name])
                     targets.append(rand_class_dict[c])
 
@@ -269,8 +269,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
 
                 data = self._img_array[indices]
 
-                _dts.append(em.Dataset(data=data, target=targets, sample_info=sample_info,
-                                       info={'all_classes': random_classes}))
+                _dts.append(em.Dataset(data=data, target=targets))
             return em.Datasets.from_list(_dts)
 
         def load_all(self):
@@ -281,7 +280,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
 
             _id = 0
             flat_data = []
-            # flat_targets = []
+            flat_targets = []
             for c in _cls:
                 all_images = list(_cls[c])
                 for img_name in all_images:
@@ -292,7 +291,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
                         self._loaded_images[c + os.path.sep + 'rot_' + str(rot)][img_name] = _id
                         _id += 1
                         flat_data.append(img)
-                        # flat_targets maybe...
+                        # flat_targets maybe... no flat targets... they depend on the episode!!
 
             self._img_array = np.stack(flat_data)
 
@@ -503,6 +502,8 @@ if __name__ == '__main__':
     # print(np.equal(d1.train.data[0], d2.train.data[0]))
 
     res = meta_omniglot_v2(std_num_classes=5, std_num_examples=(10, 20))
-    dt = res.train.generate_datasets()
-    print(dt.train.data)
+    lst = []
+    while True:
+        lst.append(res.train.generate_datasets())
+    # print(dt.train.data)
     # print(res)
