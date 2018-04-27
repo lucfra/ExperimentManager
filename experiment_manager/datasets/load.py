@@ -267,7 +267,6 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
                 if self.info['one_hot_enc']:
                     targets = em.to_one_hot_enc(targets, dimension=num_classes)
 
-                print(self._img_array)
                 data = self._img_array[indices]
 
                 _dts.append(em.Dataset(data=data, target=targets, sample_info=sample_info,
