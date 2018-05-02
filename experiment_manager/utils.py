@@ -102,7 +102,7 @@ def _tf_string_replace(_str):
     :param _str:
     :return:
     """
-    return _str.replace('[', '_p_').replace(']', '_p_').replace(',', '_c_')
+    return _str.replace('[', 'p').replace(']', 'q').replace(',', '_c_').replace('(', 'p').replace(')', 'q')
 
 
 def namedtuple_with_defaults(typename, field_names, default_values=()):
