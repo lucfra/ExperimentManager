@@ -11,7 +11,11 @@ import pickle
 
 import os
 
-import pysftp
+try:
+    import pysftp
+except ImportError as e:
+    print(e)
+    pysftp = None
 
 
 def as_list(obj):
