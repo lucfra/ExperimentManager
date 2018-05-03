@@ -1,4 +1,5 @@
 import glob
+import sys
 
 import tensorflow as tf
 
@@ -60,7 +61,10 @@ def check_or_create_dir(directory, notebook_mode=True, create=True):
     if notebook_mode and SAVE_SETTINGS['NOTEBOOK_TITLE']:
         directory = join_paths(directory, SAVE_SETTINGS['NOTEBOOK_TITLE'])  # += '/' + settings['NOTEBOOK_TITLE']
         if not os.path.exists(directory) and create:
-            os.mkdir(directory)
+            try:
+                os.mkdir(directory)
+            except FileExistsError as e:
+                print(e, file=sys.stderr)
             print('folder ', directory, 'has been created')
     return directory
 
