@@ -26,7 +26,7 @@ class on_hyperiteration:
     def __init__(self, saver, *record_what, append_string='', do_print=None, collect_data=None, every=1):
         self.saver = saver
         self.append_string = append_string
-        if self.append_string: self.append_string = '__' + self.append_string
+        # if self.append_string: self.append_string = '__' + self.append_string
         self.do_print = do_print or saver.do_print
         self.collect_data = collect_data or saver.collect_data
 
