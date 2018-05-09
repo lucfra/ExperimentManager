@@ -90,8 +90,8 @@ def name_from_vars(var_dict, *vars_):
     return name_from_dict(new_k_v)
 
 
-def name_from_dict(_dict):
-    string_dict = {str(k): str(v) for k, v in _dict.items()}
+def name_from_dict(_dict, *exclude_names):
+    string_dict = {str(k): str(v) for k, v in _dict.items() if k not in exclude_names}
     return _tf_string_replace('_'.join(flatten_list(list(sorted(string_dict.items())))))
 
 

@@ -15,11 +15,13 @@ import h5py
 import sys
 
 from experiment_manager.datasets.utils import redivide_data
+from experiment_manager import utils
 
 try:
-    from sklearn.datasets import make_classification
-except ImportError:
-    make_classification = lambda *args: print('make_classification NOT LOADED, NEED SKLEARN', file=sys.stderr)
+    from sklearn.datasets import make_classification, make_regression
+except ImportError as _err:
+    print(_err, file=sys.stderr)
+    make_regression, make_classification = None, None
 
 from_env = os.getenv('DATASETS_FOLDER')
 if from_env:
@@ -475,16 +477,38 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
     return dts
 
 
-def random_classification_datasets(examples=(100, 100, 100), features=20, classes=5, rnd=None):
-    rnd = em.get_rand_state(rnd)
+def random_classification_datasets(n_samples, features=100, outs=1, informative=.1, partition_proportions=(.5, .3),
+                                   rnd=None, one_hot=True, **mk_cls_kwargs):
+    rnd_state = em.get_rand_state(rnd)
+    X, Y = make_classification(n_samples, features, n_informative=int(features*informative),
+                                  n_classes=outs, random_state=rnd_state, **mk_cls_kwargs)
+    if one_hot:
+        Y = utils.to_one_hot_enc(Y)
 
-    def _form_dataset(scp_dat):
-        return em.Dataset(scp_dat[0], em.utils.to_one_hot_enc(scp_dat[1]))
+    print('range of Y', np.min(Y), np.max(Y))
+    info = utils.merge_dicts({'informative': informative, 'random_seed': rnd}, mk_cls_kwargs)
+    name = em.utils.name_from_dict(info, 'w')
+    dt = em.Dataset(X, Y, name=name, info=info)
+    datasets = em.Datasets.from_list(redivide_data([dt], partition_proportions))
+    print('conditioning of X^T X', np.linalg.cond(datasets.train.data.T @ datasets.train.data))
+    return datasets
 
-    return em.Datasets.from_list([
-        _form_dataset(make_classification(ne, features, n_classes=classes, n_informative=classes, random_state=rnd))
-        for ne in em.utils.as_tuple_or_list(examples)
-    ])
+
+def random_regression_datasets(n_samples, features=100, outs=1, informative=.1, partition_proportions=(.5, .3),
+                               rnd=None, **mk_rgr_kwargs):
+    rnd_state = em.get_rand_state(rnd)
+    X, Y, w = make_regression(n_samples, features, int(features*informative), outs, random_state=rnd_state,
+                              coef=True, **mk_rgr_kwargs)
+    if outs == 1:
+        Y = np.reshape(Y, (n_samples, 1))
+
+    print('range of Y', np.min(Y), np.max(Y))
+    info = utils.merge_dicts({'informative': informative, 'random_seed': rnd, 'w': w}, mk_rgr_kwargs)
+    name = em.utils.name_from_dict(info, 'w')
+    dt = em.Dataset(X, Y, name=name, info=info)
+    datasets = em.Datasets.from_list(redivide_data([dt], partition_proportions))
+    print('conditioning of X^T X', np.linalg.cond(datasets.train.data.T @ datasets.train.data))
+    return datasets
 
 
 if __name__ == '__main__':
