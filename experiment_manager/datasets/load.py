@@ -135,6 +135,7 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
     :param n_splits: num classes per split
     :return: a Datasets of MetaDataset s
     """
+
     class OmniglotMetaDataset(em.MetaDataset):
 
         def __init__(self, info=None, rotations=None, name='Omniglot', num_classes=None, num_examples=None):
@@ -187,7 +188,7 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
                     img = imread(join(_base_folder, join(c, img_name)))
                     img = 1. - np.reshape(img, (28, 28, 1)) / 255.
                     for rot in self._rotations:
-                        img = rotate(img,  rot, reshape=False)
+                        img = rotate(img, rot, reshape=False)
                         self._loaded_images[c + os.path.sep + 'rot_' + str(rot)][img_name] = img
 
     alphabets = os.listdir(folder)
@@ -218,7 +219,7 @@ def meta_omniglot(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_example
 
 
 def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_examples=None,
-                  one_hot_enc=True, _rand=0, n_splits=None):
+                     one_hot_enc=True, _rand=0, n_splits=None):
     """
     Loading function for Omniglot dataset in learning-to-learn version. Use image data as obtained from
     https://github.com/cbfinn/maml/blob/master/data/omniglot_resized/resize_images.py
@@ -232,6 +233,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
     :param n_splits: num classes per split
     :return: a Datasets of MetaDataset s
     """
+
     class OmniglotMetaDataset(em.MetaDataset):
 
         def __init__(self, info=None, rotations=None, name='Omniglot', num_classes=None, num_examples=None):
@@ -289,7 +291,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
                     img = imread(join(_base_folder, join(c, img_name)))
                     img = 1. - np.reshape(img, (28, 28, 1)) / 255.
                     for rot in self._rotations:
-                        img = rotate(img,  rot, reshape=False)
+                        img = rotate(img, rot, reshape=False)
                         self._loaded_images[c + os.path.sep + 'rot_' + str(rot)][img_name] = _id
                         _id += 1
                         flat_data.append(img)
@@ -297,7 +299,7 @@ def meta_omniglot_v2(folder=OMNIGLOT_RESIZED, std_num_classes=None, std_num_exam
 
             self._img_array = np.stack(flat_data)
 
-        # end of class
+            # end of class
 
     alphabets = os.listdir(folder)
 
@@ -477,11 +479,11 @@ def meta_mini_imagenet(folder=MINI_IMAGENET_FOLDER_V3, sub_folders=None, std_num
     return dts
 
 
-def random_classification_datasets(n_samples, features=100, outs=1, informative=.1, partition_proportions=(.5, .3),
+def random_classification_datasets(n_samples, features=100, classes=2, informative=.1, partition_proportions=(.5, .3),
                                    rnd=None, one_hot=True, **mk_cls_kwargs):
     rnd_state = em.get_rand_state(rnd)
-    X, Y = make_classification(n_samples, features, n_informative=int(features*informative),
-                                  n_classes=outs, random_state=rnd_state, **mk_cls_kwargs)
+    X, Y = make_classification(n_samples, features,
+                               n_classes=classes, random_state=rnd_state, **mk_cls_kwargs)
     if one_hot:
         Y = utils.to_one_hot_enc(Y)
 
@@ -497,7 +499,7 @@ def random_classification_datasets(n_samples, features=100, outs=1, informative=
 def random_regression_datasets(n_samples, features=100, outs=1, informative=.1, partition_proportions=(.5, .3),
                                rnd=None, **mk_rgr_kwargs):
     rnd_state = em.get_rand_state(rnd)
-    X, Y, w = make_regression(n_samples, features, int(features*informative), outs, random_state=rnd_state,
+    X, Y, w = make_regression(n_samples, features, int(features * informative), outs, random_state=rnd_state,
                               coef=True, **mk_rgr_kwargs)
     if outs == 1:
         Y = np.reshape(Y, (n_samples, 1))
@@ -529,5 +531,5 @@ if __name__ == '__main__':
     lst = []
     while True:
         lst.append(res.train.generate_datasets())
-    # print(dt.train.data)
-    # print(res)
+        # print(dt.train.data)
+        # print(res)
