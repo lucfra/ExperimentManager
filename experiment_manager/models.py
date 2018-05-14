@@ -66,7 +66,7 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
                                                initializer=initiazlizers[2*i + 1] if
                                initiazlizers else tf.zeros_initializer)]
             out = out @ params[2*i] + params[2*i + 1]
-            if i < n_layers - 1: out = activation(out)
+            if i < n_layers - 2: out = activation(out)
             print(out)
         print('end of ', name, '-'*5)
         return ParametricFunction(x, params, out, ffnn, activation=activation)
