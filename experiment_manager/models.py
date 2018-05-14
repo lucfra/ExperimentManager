@@ -8,11 +8,12 @@ from tensorflow.python.client.session import register_session_run_conversion_fun
 
 
 class ParametricFunction:
-    def __init__(self, x, params, y, rule):
+    def __init__(self, x, params, y, rule, **kwargs):
         self.x = x
         self.y = y
         self.params = params
         self.rule = rule
+        self._kwargs = kwargs
 
     @property
     def var_list(self):
@@ -23,10 +24,10 @@ class ParametricFunction:
         return self.y
 
     def with_params(self, new_params):
-        return self.rule(self.x, new_params)
+        return self.rule(self.x, new_params, **self._kwargs)
 
     def for_input(self, new_x):
-        return self.rule(new_x, self.params)
+        return self.rule(new_x, self.params, **self._kwargs)
 
 
 tf.register_tensor_conversion_function(ParametricFunction,
@@ -68,7 +69,7 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
             if i < n_layers - 1: out = activation(out)
             print(out)
         print('end of ', name, '-'*5)
-        return ParametricFunction(x, params, out, ffnn)
+        return ParametricFunction(x, params, out, ffnn, activation=activation)
 
 
 def fixed_init_ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiazlizers=None):
