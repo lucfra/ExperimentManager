@@ -53,6 +53,7 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
         out = x
         n_layers = len(dims) if dims else len(weights)//2 + 1
 
+        print('begin of ', name, '-'*5)
         for i in range(n_layers-1):
             if weights is None:
                 with tf.variable_scope('layer_{}'.format(i + 1)):
@@ -66,7 +67,7 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
             out = out @ params[2*i] + params[2*i + 1]
             if i < n_layers - 1: out = activation(out)
             print(out)
-
+        print('end of ', name, '-'*5)
         return ParametricFunction(x, params, out, ffnn)
 
 
