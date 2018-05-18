@@ -49,6 +49,12 @@ def lin_func(x, weights=None, dim_out=None, name='lin_model'):
 
 def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiazlizers=None):
     assert dims or weights
+
+    def _process_initializer(j, default):
+        if callable(initiazlizers): return initiazlizers
+        elif initiazlizers is not None: return initiazlizers[j]
+        else: return default
+
     with tf.variable_scope(name):
         params = weights if weights is not None else []
         out = x
@@ -59,12 +65,11 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
             if weights is None:
                 with tf.variable_scope('layer_{}'.format(i + 1)):
                     params += [tf.get_variable('w',
-                                               shape=(dims[i], dims[i+1]) if initiazlizers is None or callable(initiazlizers[2*i]) else None,
+                                               shape=(dims[i], dims[i+1]) if initiazlizers is None or callable(initiazlizers) else None,
                                                dtype=tf.float32,
-                                               initializer=initiazlizers[2*i] if initiazlizers else None),
-                               tf.get_variable('b', shape=(dims[i+1],) if initiazlizers is None or callable(initiazlizers[2*i + 1]) else None,
-                                               initializer=initiazlizers[2*i + 1] if
-                               initiazlizers else tf.zeros_initializer)]
+                                               initializer=_process_initializer(2*i, None)),
+                               tf.get_variable('b', shape=(dims[i+1],) if initiazlizers is None or callable(initiazlizers) else None,
+                                               initializer=_process_initializer(2*i + 1, tf.zeros_initializer))]
             out = out @ params[2*i] + params[2*i + 1]
             if i < n_layers - 2: out = activation(out)
             print(out)

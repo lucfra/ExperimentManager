@@ -143,7 +143,7 @@ def GPU_CONFIG():
 
 # SOME SCORING UTILS FUNCTIONS
 
-half_int = lambda _m: 1.96*np.std(_m)/np.sqrt(len(_m))
+half_int = lambda _m: 1.96*np.std(_m)/np.sqrt(len(_m)-1)
 
 
 def mean_std_ci(measures, mul=1., tex=False):
