@@ -52,14 +52,17 @@ def merge_dicts(*dicts):
 
 
 def to_one_hot_enc(seq, dimension=None):
-    da_max = dimension or np.max(seq) + 1
-
-    def create_and_set(_p):
-        _tmp = np.zeros(da_max)
-        _tmp[int(_p)] = 1
-        return _tmp
-
-    return np.array([create_and_set(_v) for _v in seq])
+    da_max = dimension or int(np.max(seq)) + 1
+    _tmp = np.zeros((len(seq), da_max))
+    _tmp[range(len(_tmp)), np.array(seq, dtype=int)] = 1
+    return _tmp
+    #
+    # def create_and_set(_p):
+    #     _tmp = np.zeros(da_max)
+    #     _tmp[int(_p)] = 1
+    #     return _tmp
+    #
+    # return np.array([create_and_set(_v) for _v in seq])
 
 
 def flatten_list(lst):
