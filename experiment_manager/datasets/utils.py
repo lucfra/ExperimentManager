@@ -7,10 +7,11 @@ import scipy as sp
 
 
 def redivide_data(datasets, partition_proportions=None, shuffle=False, filters=None,
-                  maps=None, balance_classes=False):
+                  maps=None, balance_classes=False, rand=None):
     """
     Function that redivides datasets. Can be use also to shuffle or filter or map examples.
 
+    :param rand:
     :param balance_classes: # TODO RICCARDO
     :param datasets: original datasets, instances of class Dataset (works with get_data and get_targets for
                         compatibility with mnist datasets
@@ -28,6 +29,7 @@ def redivide_data(datasets, partition_proportions=None, shuffle=False, filters=N
     :return: a list of datasets of length equal to the (possibly augmented) partition_proportion
     """
 
+    rnd = em.get_rand_state(rand)
 
     all_data = vstack([get_data(d) for d in datasets])
     all_labels = stack_or_concat([get_targets(d) for d in datasets])
@@ -52,7 +54,7 @@ def redivide_data(datasets, partition_proportions=None, shuffle=False, filters=N
         #     all_data, all_labels, all_infos = sk_shuffle(all_data, all_labels, all_infos)
         # else:
         permutation = np.arange(all_data.shape[0])
-        np.random.shuffle(permutation)
+        rnd.shuffle(permutation)
 
         all_data = all_data[permutation]
         all_labels = np.array(all_labels[permutation])

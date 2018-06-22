@@ -11,6 +11,8 @@ import pickle
 
 import os
 
+from collections import OrderedDict, Callable
+
 try:
     import pysftp
 except ImportError as e:
@@ -52,14 +54,17 @@ def merge_dicts(*dicts):
 
 
 def to_one_hot_enc(seq, dimension=None):
-    da_max = dimension or np.max(seq) + 1
-
-    def create_and_set(_p):
-        _tmp = np.zeros(da_max)
-        _tmp[_p] = 1
-        return _tmp
-
-    return np.array([create_and_set(_v) for _v in seq])
+    da_max = dimension or int(np.max(seq)) + 1
+    _tmp = np.zeros((len(seq), da_max))
+    _tmp[range(len(_tmp)), np.array(seq, dtype=int)] = 1
+    return _tmp
+    #
+    # def create_and_set(_p):
+    #     _tmp = np.zeros(da_max)
+    #     _tmp[int(_p)] = 1
+    #     return _tmp
+    #
+    # return np.array([create_and_set(_v) for _v in seq])
 
 
 def flatten_list(lst):
@@ -213,5 +218,49 @@ def open_from_server(filename, remote_path=None, server='10.255.9.75', user='fra
     if not keep_local:
         os.remove(filename)
     return obj
+
+
+class DefaultOrderedDict(OrderedDict):
+    # Source: http://stackoverflow.com/a/6190500/562769
+    def __init__(self, default_factory=None, *a, **kw):
+        if (default_factory is not None and
+           not isinstance(default_factory, Callable)):
+            raise TypeError('first argument must be callable')
+        OrderedDict.__init__(self, *a, **kw)
+        self.default_factory = default_factory
+
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            return self.__missing__(key)
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = value = self.default_factory()
+        return value
+
+    def __reduce__(self):
+        if self.default_factory is None:
+            args = tuple()
+        else:
+            args = self.default_factory,
+        return type(self), args, None, None, self.items()
+
+    def copy(self):
+        return self.__copy__()
+
+    def __copy__(self):
+        return type(self)(self.default_factory, self)
+
+    def __deepcopy__(self, memo):
+        import copy
+        return type(self)(self.default_factory,
+                          copy.deepcopy(self.items()))
+
+    def __repr__(self):
+        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory,
+                                               OrderedDict.__repr__(self))
 
 
