@@ -42,6 +42,16 @@ class ParametricFunction:
                                       _inp, _prm[1], **kwa['add_arg2']._kwargs),
                                   add_arg1=self, add_arg2=other)
 
+    def __matmul__(self, other):
+        """
+        Implements mathematical composition: self \circ other
+        """
+        assert isinstance(other, ParametricFunction)
+        return ParametricFunction(other.x, [self.params, other.params], self.for_input(other.y),
+                                  lambda _inp, _prm, **kwa: kwa['comp_arg1'].rule(
+                                      _inp, _prm[0], **kwa['comp_arg1']._kwargs) @ kwa['comp_arg2'].rule(
+                                      _inp, _prm[1], **kwa['comp_arg2']._kwargs),
+                                  comp_arg1=self, comp_arg2=other)
 
 tf.register_tensor_conversion_function(ParametricFunction,
                                        lambda value, dtype=None, name=None, as_ref=False:
@@ -328,3 +338,6 @@ if __name__ == '__main__':
     bla = res_mod3.for_input(x)
 
     print(ss.run(bla))
+
+    print(bla.params)
+
