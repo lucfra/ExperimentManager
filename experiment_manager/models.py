@@ -2,7 +2,7 @@ import tensorflow as tf
 import sys
 import tensorflow.contrib.layers as tcl
 
-from experiment_manager import filter_vars, as_tuple_or_list
+from experiment_manager import filter_vars, as_tuple_or_list, merge_dicts
 
 from tensorflow.python.client.session import register_session_run_conversion_functions
 
@@ -24,10 +24,23 @@ class ParametricFunction:
         return self.y
 
     def with_params(self, new_params):
+        print(self.rule)
         return self.rule(self.x, new_params, **self._kwargs)
 
     def for_input(self, new_x):
+        print(self.rule)
         return self.rule(new_x, self.params, **self._kwargs)
+
+    def __add__(self, other):
+        """
+        Note: assumes that the inputs are the same
+        """
+        assert isinstance(other, ParametricFunction)
+        return ParametricFunction(self.x, [self.params, other.params], self.y + other.y,
+                                  lambda _inp, _prm, **kwa: kwa['add_arg1'].rule(
+                                      _inp, _prm[0], **kwa['add_arg1']._kwargs) + kwa['add_arg2'].rule(
+                                      _inp, _prm[1], **kwa['add_arg2']._kwargs),
+                                  add_arg1=self, add_arg2=other)
 
 
 tf.register_tensor_conversion_function(ParametricFunction,
@@ -38,22 +51,46 @@ register_session_run_conversion_functions(ParametricFunction,
                                           lambda pf: ([pf.y], lambda val: val[0]))
 
 
-def lin_func(x, weights=None, dim_out=None, name='lin_model'):
+def _process_initializer(initiazlizers, j, default):
+    if callable(initiazlizers):
+        return initiazlizers
+    elif initiazlizers is not None:
+        return initiazlizers[j]
+    else:
+        return default
+
+
+def _pass_shape(shape, initializer):
+    return shape if initializer is None or callable(initializer) else None
+
+
+def id_pf(x, weights=None):
+    """
+    Identity as ParametricFunction
+    """
+    return ParametricFunction(x, [], x, id_pf)
+
+def lin_func(x, weights=None, dim_out=None, activation=None, initializers=None,
+             name='lin_model', variable_getter=tf.get_variable):
     assert dim_out or weights
     with tf.variable_scope(name):
         if weights is None:
-            weights = [tf.get_variable('w', initializer=tf.zeros_initializer, shape=(x.shape[1], dim_out)),
-                       tf.get_variable('b', initializer=tf.zeros_initializer, shape=(dim_out,))]
-        return ParametricFunction(x, weights, x @ weights[0] + weights[1], lin_func)
+            weights = [variable_getter('w', initializer=_process_initializer(initializers, 0, tf.zeros_initializer),
+                                       shape=_pass_shape((x.shape[1], dim_out), initializers)),
+                       variable_getter('b', initializer=_process_initializer(initializers, 0, tf.zeros_initializer),
+                                       shape=_pass_shape((dim_out,), initializers))]
+        out = x @ weights[0] + weights[1]
+        if activation:
+            out = activation(out)
+        return ParametricFunction(x, weights, out, lin_func, activation=activation)
 
 
-def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiazlizers=None):
+def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiazlizers=None,
+         variable_getter=tf.get_variable):
+    """
+    Constructor for a feed-forward neural net as Parametric function
+    """
     assert dims or weights
-
-    def _process_initializer(j, default):
-        if callable(initiazlizers): return initiazlizers
-        elif initiazlizers is not None: return initiazlizers[j]
-        else: return default
 
     with tf.variable_scope(name):
         params = weights if weights is not None else []
@@ -64,12 +101,12 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
         for i in range(n_layers-1):
             if weights is None:
                 with tf.variable_scope('layer_{}'.format(i + 1)):
-                    params += [tf.get_variable('w',
-                                               shape=(dims[i], dims[i+1]) if initiazlizers is None or callable(initiazlizers) else None,
+                    params += [variable_getter('w',
+                                               shape=_pass_shape((dims[i], dims[i+1]),initiazlizers),
                                                dtype=tf.float32,
-                                               initializer=_process_initializer(2*i, None)),
-                               tf.get_variable('b', shape=(dims[i+1],) if initiazlizers is None or callable(initiazlizers) else None,
-                                               initializer=_process_initializer(2*i + 1, tf.zeros_initializer))]
+                                               initializer=_process_initializer(initiazlizers, 2*i, None)),
+                               variable_getter('b', shape=_pass_shape((dims[i+1],), initiazlizers),
+                                               initializer=_process_initializer(initiazlizers, 2*i + 1, tf.zeros_initializer))]
             out = out @ params[2*i] + params[2*i + 1]
             if i < n_layers - 2: out = activation(out)
             print(out)
@@ -77,18 +114,19 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
         return ParametricFunction(x, params, out, ffnn, activation=activation)
 
 
-def fixed_init_ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiazlizers=None):
+def fixed_init_ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initializers=None,
+                    variable_getter=tf.get_variable):
     from time import time
     import numpy as np
     _temp = ffnn(x, weights, dims, activation, 'tempRandomNet' + str(int(time())) + str(np.random.randint(0, 10000)),
-                 initiazlizers)
+                 initializers)
     new_session = False
     session = tf.get_default_session()
     if session is None:
         session = tf.InteractiveSession()
         new_session = True
     tf.variables_initializer(_temp.var_list).run()
-    net = ffnn(x, weights, dims, activation, name, session.run(_temp.var_list))
+    net = ffnn(x, weights, dims, activation, name, session.run(_temp.var_list), variable_getter=variable_getter)
     if new_session: session.close()
     return net
 
@@ -259,28 +297,34 @@ class FeedForwardNet(Network):
 
 
 if __name__ == '__main__':
+    import numpy as np
+    x = tf.constant(np.random.rand(2, 3), tf.float32)
+    x2 = tf.constant(np.random.rand(2, 3), tf.float32)
+    lf = lin_func(x, dim_out=3)
+
+
+    idx = id_pf(x)
+
+    res_mod = lf + idx
+
     ss = tf.InteractiveSession()
-    x_ = tf.placeholder(tf.float32, shape=(3, 2))
-    md = fixed_init_ffnn(x_, dims=[2, 3, 1])
 
     tf.global_variables_initializer().run()
 
-    # md_fix = ffnn(x_, dims=[2, 3, 1], initiazlizers=ss.run(md.var_list), name='fix')
+    print(res_mod)
+    print(ss.run(lf))
+    print(ss.run(res_mod))
+
+    res_mod2 = res_mod.for_input(x2)
+
+    print(ss.run(res_mod2))
+
+    res_mod3 = res_mod2 + lin_func(x, dim_out=3, name='lin2') + idx
 
     tf.global_variables_initializer().run()
-    print(ss.run(md.var_list))
 
-    print('-'*20)
+    print(ss.run(res_mod3))
 
-    tf.global_variables_initializer().run()
-    print(ss.run(md.var_list))
+    bla = res_mod3.for_input(x)
 
-    y_ = tf.placeholder(tf.float32, shape=(10, 2))
-    print()
-    md2 = md.for_input(y_)
-
-    tf.global_variables_initializer().run()
-    print(ss.run(md2.var_list))
-
-    print()
-    # print(md2.var_list )
+    print(ss.run(bla))

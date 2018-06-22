@@ -10,12 +10,15 @@ from functools import reduce
 from inspect import signature
 from contextlib import redirect_stdout, contextmanager
 
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 
 try:
     from IPython.display import IFrame
     import IPython
-except ImportError:
+except:
     print('Looks like IPython is not installed...')
     IFrame, IPython = None, None
 import gzip
