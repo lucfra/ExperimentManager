@@ -49,6 +49,10 @@ def as_tuple_or_list(obj):
     return obj if isinstance(obj, (list, tuple)) else [obj]
 
 
+def maybe_get(obj, i):
+    return obj[i] if hasattr(obj, '__getitem__') else obj
+
+
 def merge_dicts(*dicts):
     return reduce(lambda a, nd: {**a, **nd}, dicts, {})
 

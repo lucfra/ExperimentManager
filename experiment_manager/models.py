@@ -2,7 +2,7 @@ import tensorflow as tf
 import sys
 import tensorflow.contrib.layers as tcl
 
-from experiment_manager import filter_vars, as_tuple_or_list, merge_dicts
+from experiment_manager import filter_vars, as_tuple_or_list, maybe_get
 
 from tensorflow.python.client.session import register_session_run_conversion_functions
 
@@ -53,6 +53,7 @@ class ParametricFunction:
                                       _inp, _prm[1], **kwa['comp_arg2']._kwargs),
                                   comp_arg1=self, comp_arg2=other)
 
+
 tf.register_tensor_conversion_function(ParametricFunction,
                                        lambda value, dtype=None, name=None, as_ref=False:
                                        tf.convert_to_tensor(value.y, dtype, name))
@@ -65,13 +66,14 @@ def _process_initializer(initiazlizers, j, default):
     if callable(initiazlizers):
         return initiazlizers
     elif initiazlizers is not None:
-        return initiazlizers[j]
+        return maybe_get(initiazlizers, j)
     else:
         return default
 
 
-def _pass_shape(shape, initializer):
-    return shape if initializer is None or callable(initializer) else None
+def _pass_shape(shape, initializer, j):
+    init = maybe_get(initializer, j)
+    return None if (hasattr(init, 'shape') or isinstance(init, list)) else shape
 
 
 def id_pf(x, weights=None):
@@ -80,15 +82,16 @@ def id_pf(x, weights=None):
     """
     return ParametricFunction(x, [], x, id_pf)
 
+
 def lin_func(x, weights=None, dim_out=None, activation=None, initializers=None,
              name='lin_model', variable_getter=tf.get_variable):
     assert dim_out or weights
     with tf.variable_scope(name):
         if weights is None:
             weights = [variable_getter('w', initializer=_process_initializer(initializers, 0, tf.zeros_initializer),
-                                       shape=_pass_shape((x.shape[1], dim_out), initializers)),
-                       variable_getter('b', initializer=_process_initializer(initializers, 0, tf.zeros_initializer),
-                                       shape=_pass_shape((dim_out,), initializers))]
+                                       shape=_pass_shape((x.shape[1], dim_out), initializers, 0)),
+                       variable_getter('b', initializer=_process_initializer(initializers, 1, tf.zeros_initializer),
+                                       shape=_pass_shape((dim_out,), initializers, 1))]
         out = x @ weights[0] + weights[1]
         if activation:
             out = activation(out)
@@ -112,10 +115,10 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
             if weights is None:
                 with tf.variable_scope('layer_{}'.format(i + 1)):
                     params += [variable_getter('w',
-                                               shape=_pass_shape((dims[i], dims[i+1]),initiazlizers),
+                                               shape=_pass_shape((dims[i], dims[i+1]), initiazlizers, 2*i),
                                                dtype=tf.float32,
                                                initializer=_process_initializer(initiazlizers, 2*i, None)),
-                               variable_getter('b', shape=_pass_shape((dims[i+1],), initiazlizers),
+                               variable_getter('b', shape=_pass_shape((dims[i+1],), initiazlizers, 2*i),
                                                initializer=_process_initializer(initiazlizers, 2*i + 1, tf.zeros_initializer))]
             out = out @ params[2*i] + params[2*i + 1]
             if i < n_layers - 2: out = activation(out)
