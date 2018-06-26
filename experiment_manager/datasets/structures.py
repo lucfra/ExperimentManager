@@ -347,7 +347,7 @@ class WindowedData(object):
 
 
 class ExampleVisiting:
-    def __init__(self, dataset, batch_size, epochs=None):
+    def __init__(self, dataset, batch_size, epochs=None, rnd=None):
         """
         Class for stochastic sampling of data points. It is most useful for feeding examples for the the
         training ops of `ReverseHG` or `ForwardHG`. Most notably, if the number of epochs is specified,
@@ -364,6 +364,8 @@ class ExampleVisiting:
         self.epochs = epochs
         self.T = int(np.ceil(dataset.num_examples / batch_size))
         if self.epochs: self.T *= self.epochs
+
+        self.rnd = get_rand_state(rnd)
 
         self.training_schedule = None
         self.iter_per_epoch = int(dataset.num_examples / batch_size)
@@ -384,7 +386,7 @@ class ExampleVisiting:
 
         def all_indices_shuffled():
             _res = list(range(self.dataset.num_examples))
-            np.random.shuffle(_res)
+            self.rnd.shuffle(_res)
             return _res
 
         # noinspection PyUnusedLocal
