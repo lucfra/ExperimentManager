@@ -224,6 +224,12 @@ def open_from_server(filename, remote_path=None, server='10.255.9.75', user='fra
     return obj
 
 
+def get_global_step(name='GlobalStep', init=0):
+    import tensorflow as tf
+    return tf.get_variable(name, initializer=init, trainable=False,
+                           collections=[tf.GraphKeys.GLOBAL_STEP, tf.GraphKeys.GLOBAL_VARIABLES])
+
+
 class DefaultOrderedDict(OrderedDict):
     # Source: http://stackoverflow.com/a/6190500/562769
     def __init__(self, default_factory=None, *a, **kw):

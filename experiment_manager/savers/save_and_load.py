@@ -542,7 +542,7 @@ class Saver:
 
         if do_print:
             if tabulate:
-                print(tabulate([(k, v) for k, v in save_dict.items() if not k.startswith('HIDE')
+                print(tabulate([(k.replace('SKIP::', ''), v) for k, v in save_dict.items() if not k.startswith('HIDE')
                                 ],
                                headers=('Step %s' % step, '/'.join(self.experiment_names)),
                                floatfmt='.5f'))
