@@ -103,7 +103,7 @@ def ffnn(x, weights=None, dims=None, activation=tf.nn.relu, name='ffnn', initiaz
     """
     Constructor for a feed-forward neural net as Parametric function
     """
-    assert dims or weights
+    assert dims or weights or isinstance(initiazlizers, list)
 
     with tf.variable_scope(name):
         params = weights if weights is not None else []
