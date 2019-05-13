@@ -1,5 +1,9 @@
 from collections import defaultdict
 
+import matplotlib  # make sure not to use any type3 fonts when saving plots!!!!
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 import matplotlib.pyplot as plt
 import seaborn
 import sys
